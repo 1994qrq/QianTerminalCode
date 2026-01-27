@@ -1,0 +1,34 @@
+# Build results
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# User settings
+appsettings.local.json
+settings.json
+
+# WebView2 cache
+EBWebView/

@@ -1,0 +1,196 @@
+<Window x:Class="MyAiHelper.Views.NotificationPopupWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="通知"
+        Width="340"
+        Height="120"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        ResizeMode="NoResize">
+
+    <Window.Resources>
+        <!-- 入场动画 -->
+        <Storyboard x:Key="SlideInAnimation">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" Duration="0:0:0.3">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetProperty="(Window.RenderTransform).(TranslateTransform.X)"
+                             From="50" To="0" Duration="0:0:0.3">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+
+        <!-- 出场动画 -->
+        <Storyboard x:Key="SlideOutAnimation" Completed="SlideOutAnimation_Completed">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                             From="1" To="0" Duration="0:0:0.2">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseIn"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetProperty="(Window.RenderTransform).(TranslateTransform.X)"
+                             From="0" To="50" Duration="0:0:0.2">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseIn"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+
+        <!-- 发光边框动画 -->
+        <Storyboard x:Key="GlowAnimation" RepeatBehavior="Forever" AutoReverse="True">
+            <DoubleAnimation Storyboard.TargetName="GlowEffect"
+                             Storyboard.TargetProperty="Opacity"
+                             From="0.3" To="0.6" Duration="0:0:1.5"/>
+        </Storyboard>
+    </Window.Resources>
+
+    <Window.RenderTransform>
+        <TranslateTransform X="0" Y="0"/>
+    </Window.RenderTransform>
+
+    <!-- 主容器 -->
+    <Grid Margin="10">
+        <!-- 外发光效果 -->
+        <Border x:Name="GlowBorder" CornerRadius="8" Opacity="0.4">
+            <Border.Effect>
+                <DropShadowEffect x:Name="GlowEffect" Color="#00d4ff" BlurRadius="20" ShadowDepth="0" Opacity="0.4"/>
+            </Border.Effect>
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#00d4ff" Offset="0"/>
+                    <GradientStop Color="#bd00ff" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+
+        <!-- 主内容边框 -->
+        <Border CornerRadius="8" Cursor="Hand"
+                MouseLeftButtonDown="Border_MouseLeftButtonDown"
+                MouseEnter="Border_MouseEnter"
+                MouseLeave="Border_MouseLeave">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#0a0a14" Offset="0"/>
+                    <GradientStop Color="#0f0f1a" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <Border.BorderBrush>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#00d4ff" Offset="0"/>
+                    <GradientStop Color="#bd00ff" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.BorderBrush>
+            <Border.BorderThickness>1</Border.BorderThickness>
+
+            <Grid>
+                <!-- 扫描线效果 -->
+                <Border x:Name="ScanLine" Height="2" VerticalAlignment="Top" Opacity="0.6" IsHitTestVisible="False">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                            <GradientStop Color="Transparent" Offset="0"/>
+                            <GradientStop Color="#00d4ff" Offset="0.5"/>
+                            <GradientStop Color="Transparent" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Border.RenderTransform>
+                        <TranslateTransform x:Name="ScanLineTransform"/>
+                    </Border.RenderTransform>
+                    <Border.Triggers>
+                        <EventTrigger RoutedEvent="Loaded">
+                            <BeginStoryboard>
+                                <Storyboard RepeatBehavior="Forever">
+                                    <DoubleAnimation Storyboard.TargetName="ScanLineTransform"
+                                                     Storyboard.TargetProperty="Y"
+                                                     From="0" To="98" Duration="0:0:2"/>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </Border.Triggers>
+                </Border>
+
+                <Grid Margin="15,12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- 图标 -->
+                    <TextBlock Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"
+                               Text="◈" FontSize="28" Foreground="#00d4ff"
+                               VerticalAlignment="Center" Margin="0,0,12,0">
+                        <TextBlock.Effect>
+                            <DropShadowEffect Color="#00d4ff" BlurRadius="10" ShadowDepth="0" Opacity="0.8"/>
+                        </TextBlock.Effect>
+                    </TextBlock>
+
+                    <!-- 标题 -->
+                    <TextBlock x:Name="TitleText" Grid.Row="0" Grid.Column="1"
+                               Text="任务完成" FontSize="14" FontWeight="SemiBold"
+                               Foreground="White" VerticalAlignment="Center"/>
+
+                    <!-- 关闭按钮 -->
+                    <Button Grid.Row="0" Grid.Column="2" Content="✕"
+                            Width="20" Height="20" FontSize="10"
+                            Background="Transparent" Foreground="#6a6a8a"
+                            BorderThickness="0" Cursor="Hand"
+                            Click="CloseButton_Click"
+                            VerticalAlignment="Top" HorizontalAlignment="Right">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    CornerRadius="3">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#ff2a6d30"/>
+                                        <Setter Property="Foreground" Value="#ff2a6d"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <!-- 消息内容 -->
+                    <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,4,0,0">
+                        <TextBlock x:Name="TabNameText" Text="📂 项目名称"
+                                   FontSize="12" Foreground="#00d4ff" Margin="0,0,0,2"/>
+                        <TextBlock x:Name="MessageText" Text="Claude Code 任务已完成"
+                                   FontSize="11" Foreground="#a0a0c0"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+
+                    <!-- 底部：提示和时间 -->
+                    <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,8,0,0">
+                        <TextBlock Text="点击查看" FontSize="10" Foreground="#4a4a6a"
+                                   HorizontalAlignment="Left"/>
+                        <TextBlock x:Name="TimeText" Text="刚刚" FontSize="10" Foreground="#4a4a6a"
+                                   HorizontalAlignment="Right"/>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

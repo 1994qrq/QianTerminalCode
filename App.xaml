@@ -1,0 +1,20 @@
+﻿<Application x:Class="MyAiHelper.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:MyAiHelper"
+             xmlns:hc="https://handyorg.github.io/handycontrol"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/SkinDark.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/Theme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- 添加转换器 -->
+            <local:BoolToStatusColorConverter x:Key="BoolToStatusColorConverter" xmlns:local="clr-namespace:MyAiHelper.Converters"/>
+            <local:String2VisibilityConverter x:Key="String2VisibilityConverter" xmlns:local="clr-namespace:MyAiHelper.Converters"/>
+            <local:IntToVisibilityConverter x:Key="IntToVisibilityConverter" xmlns:local="clr-namespace:MyAiHelper.Converters"/>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

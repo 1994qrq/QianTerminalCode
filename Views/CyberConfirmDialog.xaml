@@ -1,0 +1,322 @@
+<Window x:Class="MyAiHelper.Views.CyberConfirmDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Confirm"
+        Height="220"
+        Width="420"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Topmost="True">
+
+    <Window.Resources>
+        <!-- Colors -->
+        <Color x:Key="CyberBlack">#05050A</Color>
+        <Color x:Key="CyberDark">#0D0D14</Color>
+        <Color x:Key="CyberSurface">#14141F</Color>
+        <Color x:Key="CyberBlue">#00D4FF</Color>
+        <Color x:Key="CyberPurple">#BD00FF</Color>
+        <Color x:Key="CyberPink">#FF0080</Color>
+        <Color x:Key="CyberText">#E0E0FF</Color>
+        <Color x:Key="CyberTextDim">#6A6A8A</Color>
+        <Color x:Key="CyberYellow">#FFD600</Color>
+
+        <!-- Brushes -->
+        <SolidColorBrush x:Key="CyberBlackBrush" Color="{StaticResource CyberBlack}"/>
+        <SolidColorBrush x:Key="CyberDarkBrush" Color="{StaticResource CyberDark}"/>
+        <SolidColorBrush x:Key="CyberSurfaceBrush" Color="{StaticResource CyberSurface}"/>
+        <SolidColorBrush x:Key="CyberBlueBrush" Color="{StaticResource CyberBlue}"/>
+        <SolidColorBrush x:Key="CyberPurpleBrush" Color="{StaticResource CyberPurple}"/>
+        <SolidColorBrush x:Key="CyberTextBrush" Color="{StaticResource CyberText}"/>
+        <SolidColorBrush x:Key="CyberTextDimBrush" Color="{StaticResource CyberTextDim}"/>
+        <SolidColorBrush x:Key="CyberYellowBrush" Color="{StaticResource CyberYellow}"/>
+
+        <!-- Neon Gradient Border -->
+        <LinearGradientBrush x:Key="NeonBorderBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="{StaticResource CyberBlue}" Offset="0"/>
+            <GradientStop Color="{StaticResource CyberPurple}" Offset="0.5"/>
+            <GradientStop Color="{StaticResource CyberPink}" Offset="1"/>
+        </LinearGradientBrush>
+
+        <!-- Window Background Gradient -->
+        <LinearGradientBrush x:Key="WindowBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#08080F" Offset="0"/>
+            <GradientStop Color="#0A0A14" Offset="0.5"/>
+            <GradientStop Color="#0C0C18" Offset="1"/>
+        </LinearGradientBrush>
+
+        <!-- Title Bar Gradient -->
+        <LinearGradientBrush x:Key="TitleBarGradient" StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Color="#0A0A12" Offset="0"/>
+            <GradientStop Color="#0C0C16" Offset="0.5"/>
+            <GradientStop Color="#0A0A12" Offset="1"/>
+        </LinearGradientBrush>
+
+        <!-- Dialog Button Base Style -->
+        <Style x:Key="DialogButtonStyle" TargetType="Button">
+            <Setter Property="MinWidth" Value="100"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="20,8"/>
+        </Style>
+
+        <!-- Cancel Button Style -->
+        <Style x:Key="CancelButtonStyle" TargetType="Button" BasedOn="{StaticResource DialogButtonStyle}">
+            <Setter Property="Foreground" Value="{StaticResource CyberTextDimBrush}"/>
+            <Setter Property="BorderBrush" Value="#2A2A40"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#15FFFFFF"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#4A4A6A"/>
+                                <Setter Property="Foreground" Value="{StaticResource CyberTextBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#25FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Confirm Button Style (Primary) -->
+        <Style x:Key="ConfirmButtonStyle" TargetType="Button" BasedOn="{StaticResource DialogButtonStyle}">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="{StaticResource CyberBlueBrush}"/>
+            <Setter Property="Background" Value="#1500D4FF"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2500D4FF"/>
+                                <Setter TargetName="border" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect Color="{StaticResource CyberBlue}" BlurRadius="15" ShadowDepth="0" Opacity="0.6"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#3500D4FF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Close Button Style -->
+        <Style x:Key="CloseButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{StaticResource CyberTextDimBrush}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="4">
+                            <TextBlock Text="&#x2715;"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       FontSize="12"
+                                       Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#30FF2A6D"/>
+                                <Setter Property="Foreground" Value="#FF2A6D"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <!-- Main Container with Neon Border -->
+    <Border x:Name="MainBorder"
+            Background="{StaticResource WindowBackgroundBrush}"
+            BorderBrush="{StaticResource NeonBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Margin="8">
+        <Border.Effect>
+            <DropShadowEffect Color="{StaticResource CyberPurple}" BlurRadius="25" ShadowDepth="0" Opacity="0.4"/>
+        </Border.Effect>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <!-- Title Bar -->
+                <RowDefinition Height="40"/>
+                <!-- Content -->
+                <RowDefinition Height="*"/>
+                <!-- Buttons -->
+                <RowDefinition Height="60"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title Bar -->
+            <Border Grid.Row="0"
+                    Background="{StaticResource TitleBarGradient}"
+                    CornerRadius="8,8,0,0"
+                    MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Grid>
+                    <StackPanel Orientation="Horizontal"
+                                VerticalAlignment="Center"
+                                Margin="16,0,0,0">
+                        <!-- Icon -->
+                        <TextBlock Text="&#x25C8;"
+                                   Foreground="{StaticResource CyberBlueBrush}"
+                                   FontSize="14"
+                                   VerticalAlignment="Center">
+                            <TextBlock.Effect>
+                                <DropShadowEffect Color="{StaticResource CyberBlue}" BlurRadius="8" ShadowDepth="0" Opacity="0.8"/>
+                            </TextBlock.Effect>
+                        </TextBlock>
+                        <!-- Title -->
+                        <TextBlock x:Name="TitleText"
+                                   Text="Confirm"
+                                   Foreground="{StaticResource CyberTextBrush}"
+                                   FontFamily="Consolas"
+                                   FontSize="14"
+                                   FontWeight="Medium"
+                                   VerticalAlignment="Center"
+                                   Margin="10,0,0,0"/>
+                    </StackPanel>
+
+                    <!-- Close Button -->
+                    <Button Style="{StaticResource CloseButtonStyle}"
+                            HorizontalAlignment="Right"
+                            Margin="0,0,8,0"
+                            Click="CloseButton_Click"/>
+                </Grid>
+            </Border>
+
+            <!-- Separator Line -->
+            <Border Grid.Row="0"
+                    VerticalAlignment="Bottom"
+                    Height="1">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Color="Transparent" Offset="0"/>
+                        <GradientStop Color="#2A2A40" Offset="0.2"/>
+                        <GradientStop Color="#2A2A40" Offset="0.8"/>
+                        <GradientStop Color="Transparent" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+
+            <!-- Content Area -->
+            <Grid Grid.Row="1" Margin="24,16,24,8">
+                <StackPanel VerticalAlignment="Center">
+                    <!-- Warning Icon + Message -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <!-- Warning Icon -->
+                        <TextBlock Text="&#x26A0;"
+                                   Foreground="{StaticResource CyberYellowBrush}"
+                                   FontSize="24"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,12,0">
+                            <TextBlock.Effect>
+                                <DropShadowEffect Color="{StaticResource CyberYellow}" BlurRadius="10" ShadowDepth="0" Opacity="0.5"/>
+                            </TextBlock.Effect>
+                        </TextBlock>
+                        <!-- Main Message -->
+                        <TextBlock x:Name="MessageText"
+                                   Text="Are you sure?"
+                                   Foreground="{StaticResource CyberTextBrush}"
+                                   FontFamily="Segoe UI"
+                                   FontSize="16"
+                                   FontWeight="Medium"
+                                   VerticalAlignment="Center"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <!-- Sub Message -->
+                    <TextBlock x:Name="SubMessageText"
+                               Text=""
+                               Foreground="{StaticResource CyberTextDimBrush}"
+                               FontFamily="Segoe UI"
+                               FontSize="13"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               Margin="0,12,0,0"
+                               Visibility="Collapsed"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Button Area -->
+            <Border Grid.Row="2"
+                    Background="#08080F"
+                    CornerRadius="0,0,8,8">
+                <!-- Top Border Line -->
+                <Grid>
+                    <Border VerticalAlignment="Top" Height="1">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="Transparent" Offset="0"/>
+                                <GradientStop Color="#1A1A2A" Offset="0.2"/>
+                                <GradientStop Color="#1A1A2A" Offset="0.8"/>
+                                <GradientStop Color="Transparent" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+
+                    <!-- Buttons -->
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Margin="0,0,0,4">
+                        <!-- Cancel Button -->
+                        <Button x:Name="CancelButton"
+                                Content="Cancel"
+                                Style="{StaticResource CancelButtonStyle}"
+                                Click="CancelButton_Click"
+                                Margin="0,0,16,0"/>
+
+                        <!-- Confirm Button -->
+                        <Button x:Name="ConfirmButton"
+                                Content="Confirm"
+                                Style="{StaticResource ConfirmButtonStyle}"
+                                Click="ConfirmButton_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>
