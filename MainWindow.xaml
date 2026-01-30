@@ -34,6 +34,8 @@
         <converters:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
         <converters:AnyBoolToCollapsedConverter x:Key="AnyBoolToCollapsedConverter"/>
         <converters:ShellTypeToCheckedConverter x:Key="ShellTypeToCheckedConverter"/>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
 
         <!-- ==================== Cyberpunk Theme Resources ==================== -->
 
@@ -636,6 +638,82 @@
                             <EventSetter Event="Drop" Handler="TabItem_Drop"/>
                             <EventSetter Event="DragEnter" Handler="TabItem_DragEnter"/>
                             <EventSetter Event="DragLeave" Handler="TabItem_DragLeave"/>
+                            <Setter Property="ContextMenu">
+                                <Setter.Value>
+                                    <ContextMenu Background="#0A0A14" BorderBrush="#252535" BorderThickness="1">
+                                        <ContextMenu.Resources>
+                                            <Style TargetType="MenuItem">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="Foreground" Value="#E0E0FF"/>
+                                                <Setter Property="FontSize" Value="12"/>
+                                                <Setter Property="Padding" Value="12,8"/>
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="MenuItem">
+                                                            <Border x:Name="Bd" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="24"/>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <ContentPresenter Grid.Column="0" ContentSource="Icon" VerticalAlignment="Center"/>
+                                                                    <ContentPresenter Grid.Column="1" ContentSource="Header" VerticalAlignment="Center"/>
+                                                                </Grid>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsHighlighted" Value="True">
+                                                                    <Setter TargetName="Bd" Property="Background" Value="#1A00D4FF"/>
+                                                                    <Setter Property="Foreground" Value="#00D4FF"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </ContextMenu.Resources>
+                                        <MenuItem Header="查看详情"
+                                                  Command="{Binding Data.ShowTabDetailsCommand, Source={StaticResource ViewModelProxy}}"
+                                                  CommandParameter="{Binding}">
+                                            <MenuItem.Icon>
+                                                <TextBlock Text="📋" FontSize="14"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <Separator Background="#252535" Margin="8,4"/>
+                                        <MenuItem Command="{Binding Data.ToggleTabDisabledCommand, Source={StaticResource ViewModelProxy}}"
+                                                  CommandParameter="{Binding}">
+                                            <MenuItem.Style>
+                                                <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                                    <Setter Property="Header" Value="禁用"/>
+                                                    <Setter Property="Icon">
+                                                        <Setter.Value>
+                                                            <TextBlock Text="⏸" FontSize="14"/>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsDisabled}" Value="True">
+                                                            <Setter Property="Header" Value="启用"/>
+                                                            <Setter Property="Icon">
+                                                                <Setter.Value>
+                                                                    <TextBlock Text="▶" FontSize="14" Foreground="#00FF9D"/>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </MenuItem.Style>
+                                        </MenuItem>
+                                        <Separator Background="#252535" Margin="8,4"/>
+                                        <MenuItem Header="关闭"
+                                                  Command="{Binding Data.CloseTabCommand, Source={StaticResource ViewModelProxy}}"
+                                                  CommandParameter="{Binding}"
+                                                  Foreground="#FF6B6B">
+                                            <MenuItem.Icon>
+                                                <TextBlock Text="✕" FontSize="14" Foreground="#FF6B6B"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </Setter.Value>
+                            </Setter>
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="TabItem">
@@ -768,6 +846,16 @@
                                                     </BeginStoryboard>
                                                 </Trigger.EnterActions>
                                             </Trigger>
+                                            <!-- 禁用状态样式 -->
+                                            <DataTrigger Binding="{Binding IsDisabled}" Value="True">
+                                                <Setter Property="Opacity" Value="0.5"/>
+                                                <Setter TargetName="MainBorder" Property="BorderBrush" Value="#404050"/>
+                                                <Setter TargetName="Indicator" Property="Background">
+                                                    <Setter.Value>
+                                                        <SolidColorBrush Color="#505070"/>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </DataTrigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
                                 </Setter.Value>
@@ -777,16 +865,23 @@
                     <TabControl.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <Grid Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center">
-                                    <Ellipse Fill="{Binding IsRunning, Converter={StaticResource BoolToStatusColorConverter}}"/>
-                                    <Ellipse>
-                                        <Ellipse.Effect>
-                                            <BlurEffect Radius="4"/>
-                                        </Ellipse.Effect>
-                                        <Ellipse.Fill>
-                                            <SolidColorBrush Color="{Binding IsRunning, Converter={StaticResource BoolToStatusColorConverter}}"/>
-                                        </Ellipse.Fill>
-                                    </Ellipse>
+                                <Grid Width="12" Height="12" Margin="0,0,6,0" VerticalAlignment="Center">
+                                    <!-- 禁用状态图标 -->
+                                    <TextBlock Text="⏸" FontSize="10" Foreground="#505070"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Visibility="{Binding IsDisabled, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                    <!-- 运行状态指示器 -->
+                                    <Grid Visibility="{Binding IsDisabled, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                                        <Ellipse Width="8" Height="8" Fill="{Binding IsRunning, Converter={StaticResource BoolToStatusColorConverter}}"/>
+                                        <Ellipse Width="8" Height="8">
+                                            <Ellipse.Effect>
+                                                <BlurEffect Radius="4"/>
+                                            </Ellipse.Effect>
+                                            <Ellipse.Fill>
+                                                <SolidColorBrush Color="{Binding IsRunning, Converter={StaticResource BoolToStatusColorConverter}}"/>
+                                            </Ellipse.Fill>
+                                        </Ellipse>
+                                    </Grid>
                                 </Grid>
                                 <TextBlock Text="{Binding DisplayName}"
                                            FontSize="12"

@@ -1,6 +1,6 @@
 using System;
 
-namespace MyAiHelper.Models;
+namespace CodeBridge.Models;
 
 /// <summary>
 /// 标签配置模型
@@ -16,4 +16,5 @@ public class TabConfig
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;  // 创建时间
     public DateTime LastUsedUtc { get; set; } = DateTime.UtcNow;   // 最后使用时间
     public bool IsPinned { get; set; }
+    public bool IsDisabled { get; set; }  // 是否禁用（跳过初始化）
 }

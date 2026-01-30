@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
-using MyAiHelper.Models;
-using MyAiHelper.Services;
+using CodeBridge.Models;
+using CodeBridge.Services;
 
-namespace MyAiHelper.ViewModels;
+namespace CodeBridge.ViewModels;
 
 /// <summary>
 /// 终端标签 ViewModel - 集成 WebView2
@@ -32,6 +32,9 @@ public partial class TerminalTabViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private WebView2? _webView;
+
+    [ObservableProperty]
+    private bool _isDisabled = false;
 
     /// <summary>
     /// 任务完成检测器
@@ -61,19 +64,95 @@ public partial class TerminalTabViewModel : ObservableObject, IDisposable
     private readonly TerminalService _terminalService;
     private TerminalService.TerminalSession? _session;
     private bool _isDisposed = false;
+    private string _shellType = "powershell";
 
-    public TerminalTabViewModel(TabConfig config, TerminalService terminalService)
+    /// <summary>
+    /// 设置 Shell 类型（powershell 或 cmd）
+    /// </summary>
+    public string ShellType
+    {
+        get => _shellType;
+        set => _shellType = value;
+    }
+
+    public TerminalTabViewModel(TabConfig config, TerminalService terminalService, string shellType = "powershell")
     {
         _config = config;
         _title = config.Name;
         _terminalService = terminalService;
+        _shellType = shellType;
+        _isDisabled = config.IsDisabled;
+
+        // 如果被禁用，跳过初始化
+        if (_isDisabled)
+        {
+            IsRunning = false;
+            return;
+        }
 
         // 初始化任务完成检测器
         _completionDetector = new TaskCompletionDetector(config.Id);
         _completionDetector.EnableHeuristics = false;  // 关闭启发式检测（使用 Hooks）
         _completionDetector.EnableIdleTimeout = false; // 关闭空闲超时检测（使用 Hooks）
         _completionDetector.TaskCompleted += OnTaskCompleted;
+        _completionDetector.ActivityChanged += OnActivityChanged;
 
+        InitializeWebView();
+    }
+
+    /// <summary>
+    /// 禁用标签页（停止终端但保留标签）
+    /// </summary>
+    public void Disable()
+    {
+        if (_isDisabled) return;
+
+        IsDisabled = true;
+        Config.IsDisabled = true;
+        IsRunning = false;
+        IsTaskRunning = false;
+
+        // 停止终端
+        _terminalService.Stop(Config.Id);
+
+        // 释放任务完成检测器
+        if (_completionDetector != null)
+        {
+            _completionDetector.TaskCompleted -= OnTaskCompleted;
+            _completionDetector.ActivityChanged -= OnActivityChanged;
+            _completionDetector.Dispose();
+            _completionDetector = null;
+        }
+
+        // 释放 WebView
+        if (WebView != null)
+        {
+            if (WebView.CoreWebView2 != null)
+                WebView.CoreWebView2.WebMessageReceived -= OnWebMessageReceived;
+            WebView.Dispose();
+            WebView = null;
+        }
+    }
+
+    /// <summary>
+    /// 启用标签页（重新初始化终端）
+    /// </summary>
+    public void Enable()
+    {
+        if (!_isDisabled) return;
+
+        IsDisabled = false;
+        Config.IsDisabled = false;
+        IsRunning = true;
+
+        // 重新初始化任务完成检测器
+        _completionDetector = new TaskCompletionDetector(Config.Id);
+        _completionDetector.EnableHeuristics = false;
+        _completionDetector.EnableIdleTimeout = false;
+        _completionDetector.TaskCompleted += OnTaskCompleted;
+        _completionDetector.ActivityChanged += OnActivityChanged;
+
+        // 重新初始化 WebView
         InitializeWebView();
     }
 
@@ -84,6 +163,18 @@ public partial class TerminalTabViewModel : ObservableObject, IDisposable
     {
         IsTaskRunning = false;
         TaskCompleted?.Invoke(this, e);
+    }
+
+    /// <summary>
+    /// 活动状态变化回调
+    /// </summary>
+    private void OnActivityChanged(object? sender, bool isActive)
+    {
+        // 需要在 UI 线程更新属性
+        WebView?.Dispatcher.InvokeAsync(() =>
+        {
+            IsTaskRunning = isActive;
+        });
     }
 
     private async void InitializeWebView()
@@ -205,6 +296,45 @@ public partial class TerminalTabViewModel : ObservableObject, IDisposable
         .xterm-viewport::-webkit-scrollbar-track { background: #1e1e1e; }
         .xterm-viewport::-webkit-scrollbar-thumb { background: #424242; border-radius: 5px; }
         .xterm-viewport::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        /* 复制按钮样式 */
+        #copy-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #00d4ff30, #bd00ff20);
+            border: 1px solid #00d4ff60;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 12px;
+            font-family: 'Segoe UI', sans-serif;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 0 15px #00d4ff40;
+        }
+        #copy-btn.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        #copy-btn:hover {
+            background: linear-gradient(135deg, #00d4ff50, #bd00ff40);
+            box-shadow: 0 0 20px #00d4ff60;
+            transform: scale(1.05);
+        }
+        #copy-btn:active {
+            transform: scale(0.95);
+        }
+        #copy-btn.copied {
+            background: linear-gradient(135deg, #00ff9d30, #00ff9d20);
+            border-color: #00ff9d60;
+        }
     </style>
 </head>
 <body>
@@ -218,6 +348,7 @@ public partial class TerminalTabViewModel : ObservableObject, IDisposable
     </div>
 
     <div id="terminal"></div>
+    <button id="copy-btn">📋 复制选中</button>
     <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm-addon-web-links@0.9.0/lib/xterm-addon-web-links.js"></script>
@@ -358,6 +489,70 @@ public partial class TerminalTabViewModel : ObservableObject, IDisposable
 
         // 禁用右键默认菜单
         document.addEventListener('contextmenu', e => e.preventDefault());
+
+        // 复制按钮逻辑
+        const copyBtn = document.getElementById('copy-btn');
+        let lastSelection = '';  // 保存最后的选中文本
+
+        // 监听选中变化
+        term.onSelectionChange(() => {
+            const sel = term.getSelection();
+            console.log('[CopyBtn] Selection changed:', sel ? sel.length : 0, 'chars');
+            if (sel && sel.length > 0) {
+                lastSelection = sel;  // 保存选中文本
+                copyBtn.classList.add('visible');
+            } else {
+                copyBtn.classList.remove('visible');
+                copyBtn.classList.remove('copied');
+                copyBtn.textContent = '📋 复制选中';
+            }
+        });
+
+        // 点击复制按钮
+        copyBtn.addEventListener('mousedown', async (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            console.log('[CopyBtn] Clicked, lastSelection:', lastSelection ? lastSelection.length : 0, 'chars');
+
+            // 使用保存的选中文本
+            const textToCopy = lastSelection || term.getSelection();
+            console.log('[CopyBtn] Text to copy:', textToCopy ? textToCopy.length : 0, 'chars');
+
+            if (textToCopy) {
+                try {
+                    // 方法1: 使用 WebView2 postMessage 让 C# 处理复制
+                    if (window.chrome && window.chrome.webview) {
+                        window.chrome.webview.postMessage({ type: 'copy', data: textToCopy });
+                    }
+
+                    // 方法2: 备选 - 尝试 navigator.clipboard
+                    try {
+                        await navigator.clipboard.writeText(textToCopy);
+                        console.log('[CopyBtn] Clipboard API success');
+                    } catch (clipErr) {
+                        console.log('[CopyBtn] Clipboard API failed, using fallback');
+                    }
+
+                    copyBtn.classList.add('copied');
+                    copyBtn.textContent = '✓ 已复制';
+                    setTimeout(() => {
+                        copyBtn.classList.remove('visible');
+                        copyBtn.classList.remove('copied');
+                        copyBtn.textContent = '📋 复制选中';
+                        lastSelection = '';
+                    }, 1500);
+                } catch (err) {
+                    console.error('[CopyBtn] Error:', err);
+                }
+            } else {
+                console.log('[CopyBtn] No text to copy');
+            }
+        });
+
+        // 点击终端区域时隐藏复制按钮（清除选中）
+        document.getElementById('terminal').addEventListener('click', () => {
+            term.focus();
+        });
     </script>
 </body>
 </html>
@@ -387,7 +582,7 @@ public partial class TerminalTabViewModel : ObservableObject, IDisposable
 
     private void StartTerminal()
     {
-        _session = _terminalService.Start(Config, OnTerminalOutput);
+        _session = _terminalService.Start(Config, OnTerminalOutput, _shellType);
     }
 
     private void OnTerminalOutput(string output)
@@ -397,6 +592,9 @@ public partial class TerminalTabViewModel : ObservableObject, IDisposable
 
         // 将输出传递给任务完成检测器
         _completionDetector?.ProcessOutput(output);
+
+        // 广播输出到远程控制服务
+        _ = App.RemoteControlService?.BroadcastOutputAsync(Config.Id, output);
 
         // 发送输出到 WebView2（必须在 UI 线程）
         WebView?.Dispatcher.InvokeAsync(() =>
@@ -437,6 +635,41 @@ public partial class TerminalTabViewModel : ObservableObject, IDisposable
                 if (!string.IsNullOrEmpty(input))
                     _terminalService.SendInput(Config.Id, input);
             }
+            else if (type == "copy" && root.TryGetProperty("data", out var copyDataElement))
+            {
+                // 处理复制请求
+                var textToCopy = copyDataElement.GetString();
+                if (!string.IsNullOrEmpty(textToCopy))
+                {
+                    // 在后台线程执行，避免卡顿 UI
+                    _ = Task.Run(() =>
+                    {
+                        try
+                        {
+                            // 使用 WinForms 的 Clipboard（线程安全，不需要 UI 线程）
+                            var thread = new System.Threading.Thread(() =>
+                            {
+                                try
+                                {
+                                    System.Windows.Forms.Clipboard.SetText(textToCopy);
+                                    System.Diagnostics.Debug.WriteLine($"[Copy] 已复制 {textToCopy.Length} 字符");
+                                }
+                                catch
+                                {
+                                    // 静默忽略，数据可能已复制成功
+                                }
+                            });
+                            thread.SetApartmentState(System.Threading.ApartmentState.STA);
+                            thread.Start();
+                            thread.Join(100); // 最多等 100ms
+                        }
+                        catch
+                        {
+                            // 静默忽略
+                        }
+                    });
+                }
+            }
             else if (type == "resize" &&
                      root.TryGetProperty("rows", out var rowsElement) &&
                      root.TryGetProperty("cols", out var colsElement))
@@ -444,6 +677,9 @@ public partial class TerminalTabViewModel : ObservableObject, IDisposable
                 if (rowsElement.TryGetInt32(out var rows) && colsElement.TryGetInt32(out var cols))
                 {
                     _terminalService.Resize(Config.Id, cols, rows);
+
+                    // 保存 PC 端尺寸到远程控制服务（供移动端断开时恢复）
+                    App.RemoteControlService?.SetPcSize(Config.Id, cols, rows);
                 }
             }
         }
@@ -462,6 +698,7 @@ public partial class TerminalTabViewModel : ObservableObject, IDisposable
         if (_completionDetector != null)
         {
             _completionDetector.TaskCompleted -= OnTaskCompleted;
+            _completionDetector.ActivityChanged -= OnActivityChanged;
             _completionDetector.Dispose();
         }
 
