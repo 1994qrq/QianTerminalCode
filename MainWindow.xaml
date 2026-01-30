@@ -1,16 +1,16 @@
-<Window x:Class="MyAiHelper.MainWindow"
+<Window x:Class="CodeBridge.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:hc="https://handyorg.github.io/handycontrol"
-        xmlns:local="clr-namespace:MyAiHelper"
-        xmlns:vm="clr-namespace:MyAiHelper.ViewModels"
-        xmlns:helpers="clr-namespace:MyAiHelper.Helpers"
-        xmlns:converters="clr-namespace:MyAiHelper.Converters"
+        xmlns:local="clr-namespace:CodeBridge"
+        xmlns:vm="clr-namespace:CodeBridge.ViewModels"
+        xmlns:helpers="clr-namespace:CodeBridge.Helpers"
+        xmlns:converters="clr-namespace:CodeBridge.Converters"
         mc:Ignorable="d"
         x:Name="MainWin"
-        Title="QianTerminalCode"
+        Title="飞跃侠·CodeBridge"
         Height="850"
         Width="1280"
         MinHeight="600"
@@ -33,6 +33,7 @@
         <converters:String2VisibilityConverter x:Key="String2VisibilityConverter"/>
         <converters:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
         <converters:AnyBoolToCollapsedConverter x:Key="AnyBoolToCollapsedConverter"/>
+        <converters:ShellTypeToCheckedConverter x:Key="ShellTypeToCheckedConverter"/>
 
         <!-- ==================== Cyberpunk Theme Resources ==================== -->
 
@@ -629,6 +630,12 @@
                             <Setter Property="Margin" Value="0,0,0,0"/>
                             <Setter Property="Padding" Value="14,8"/>
                             <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="AllowDrop" Value="True"/>
+                            <EventSetter Event="PreviewMouseLeftButtonDown" Handler="TabItem_PreviewMouseLeftButtonDown"/>
+                            <EventSetter Event="PreviewMouseMove" Handler="TabItem_PreviewMouseMove"/>
+                            <EventSetter Event="Drop" Handler="TabItem_Drop"/>
+                            <EventSetter Event="DragEnter" Handler="TabItem_DragEnter"/>
+                            <EventSetter Event="DragLeave" Handler="TabItem_DragLeave"/>
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="TabItem">
@@ -848,65 +855,13 @@
                         </Grid>
                     </Button>
 
-                    <!-- Tab Note Input -->
-                    <hc:TextBox Grid.Column="2"
-                                Text="{Binding TabNote, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                hc:InfoElement.Placeholder="标签备注..."
-                                hc:BorderElement.CornerRadius="4"
-                                Background="#0A0A12"
-                                BorderBrush="#252535"
-                                Foreground="{StaticResource CyberTextBrush}"
-                                Width="120"
-                                Height="30"
-                                FontSize="11"
-                                Margin="0,0,10,0"
-                                ToolTip="修改当前标签的显示名称"/>
-
-                    <!-- Path Selector -->
-                    <hc:ComboBox Grid.Column="3"
-                                 IsEditable="True"
-                                 Text="{Binding CurrentPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                 ItemsSource="{Binding History}"
-                                 DisplayMemberPath="WorkingDirectory"
-                                 hc:InfoElement.Placeholder="工作目录..."
-                                 hc:BorderElement.CornerRadius="4"
-                                 Background="#0A0A12"
-                                 BorderBrush="#252535"
-                                 Foreground="{StaticResource CyberTextBrush}"
-                                 Height="30"
-                                 FontSize="11"
-                                 Margin="0,0,10,0"/>
-
-                    <!-- Browse Button -->
-                    <Button Grid.Column="4"
-                            Content="📂"
-                            Style="{StaticResource TechButtonStyle}"
-                            Command="{Binding BrowseFolderCommand}"
-                            Width="34" Height="30"
-                            FontSize="14"
-                            Margin="0,0,12,0"
-                            ToolTip="浏览文件夹"/>
-
-                    <!-- Options -->
-                    <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
-                        <CheckBox IsChecked="{Binding AutoRunClaude}"
-                                  Content="Auto"
-                                  Foreground="{StaticResource CyberTextDimBrush}"
-                                  FontSize="11"
-                                  Margin="0,0,12,0"
-                                  ToolTip="自动运行 Claude"/>
-
-                        <CheckBox IsChecked="{Binding ContinueSession}"
-                                  Content="-c"
-                                  Foreground="{StaticResource CyberTextDimBrush}"
-                                  FontSize="11"
-                                  ToolTip="继续上次会话"/>
-                    </StackPanel>
+                    <!-- Spacer -->
+                    <Border Grid.Column="2" Grid.ColumnSpan="4"/>
 
                     <!-- New Tab Button -->
                     <Button Grid.Column="6"
                             Style="{StaticResource TechPrimaryButtonStyle}"
-                            Command="{Binding AddTabCommand}"
+                            Click="NewTabButton_Click"
                             Height="30"
                             Padding="14,0"
                             Margin="0,0,10,0">
@@ -934,6 +889,16 @@
                                 <MenuItem Header="导入配置" Command="{Binding ImportConfigCommand}"/>
                                 <MenuItem Header="导出配置" Command="{Binding ExportConfigCommand}"/>
                                 <Separator/>
+                                <MenuItem Header="终端 Shell">
+                                    <MenuItem Header="PowerShell (推荐)" Click="ShellPowerShell_Click"
+                                              IsCheckable="True" IsChecked="{Binding ShellType, Converter={StaticResource ShellTypeToCheckedConverter}, ConverterParameter=powershell}"/>
+                                    <MenuItem Header="CMD" Click="ShellCmd_Click"
+                                              IsCheckable="True" IsChecked="{Binding ShellType, Converter={StaticResource ShellTypeToCheckedConverter}, ConverterParameter=cmd}"/>
+                                </MenuItem>
+                                <Separator/>
+                                <MenuItem Header="Hook 通知配置" Click="HookConfigMenuItem_Click"/>
+                                <Separator/>
+                                <MenuItem Header="帮助指南" Click="HelpMenuItem_Click"/>
                                 <MenuItem Header="关于" Click="AboutMenuItem_Click"/>
                             </Menu>
                         </hc:SplitButton.DropDownContent>
@@ -1419,6 +1384,90 @@
                                     </Grid>
                                 </Border>
 
+                                <!-- Hook Config Section -->
+                                <Border Background="#0C0C16" CornerRadius="6" Padding="12" Margin="0,0,0,8">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Row="0" Grid.Column="0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="Claude Hook 配置" Foreground="White" FontSize="13"/>
+                                                <Ellipse Width="8" Height="8" Margin="8,0,0,0" VerticalAlignment="Center">
+                                                    <Ellipse.Style>
+                                                        <Style TargetType="Ellipse">
+                                                            <Setter Property="Fill" Value="#ff6b6b"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsHookConfigured}" Value="True">
+                                                                    <Setter Property="Fill" Value="#16c60c"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Ellipse.Style>
+                                                </Ellipse>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding HookStatusText}" Foreground="#6a6a8a" FontSize="10" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <Button Grid.Row="0" Grid.Column="1"
+                                                Command="{Binding ConfigureHookCommand}"
+                                                Style="{StaticResource TechPrimaryButtonStyle}"
+                                                Padding="12,6" FontSize="11"
+                                                VerticalAlignment="Top">
+                                            <Button.Content>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="◈" Margin="0,0,6,0"
+                                                               Visibility="{Binding IsConfiguringHook, Converter={StaticResource Boolean2VisibilityConverter}}">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsConfiguringHook}" Value="True">
+                                                                        <DataTrigger.EnterActions>
+                                                                            <BeginStoryboard>
+                                                                                <Storyboard RepeatBehavior="Forever">
+                                                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                                                                     From="0" To="360" Duration="0:0:1"/>
+                                                                                </Storyboard>
+                                                                            </BeginStoryboard>
+                                                                        </DataTrigger.EnterActions>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                        <TextBlock.RenderTransform>
+                                                            <RotateTransform CenterX="5" CenterY="7"/>
+                                                        </TextBlock.RenderTransform>
+                                                    </TextBlock>
+                                                    <TextBlock>
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Text" Value="一键配置"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsConfiguringHook}" Value="True">
+                                                                        <Setter Property="Text" Value="配置中..."/>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding IsHookConfigured}" Value="True">
+                                                                        <Setter Property="Text" Value="重新配置"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Button.Content>
+                                        </Button>
+                                        <TextBlock Grid.Row="1" Grid.ColumnSpan="2"
+                                                   Text="💡 配置后，Claude Code 任务完成时将自动发送通知"
+                                                   Foreground="#4a4a6a"
+                                                   FontSize="10"
+                                                   Margin="0,8,0,0"/>
+                                    </Grid>
+                                </Border>
+
                                 <!-- Divider -->
                                 <Border Height="1" Background="#1A1A2A" Margin="0,12,0,16"/>
 
@@ -1484,6 +1533,190 @@
                                                       VerticalAlignment="Center"/>
                                     </Grid>
                                 </Border>
+
+                                <!-- Divider -->
+                                <Border Height="1" Background="#1A1A2A" Margin="0,12,0,16"/>
+
+                                <!-- Remote Control Section -->
+                                <TextBlock Text="远程控制" Foreground="#00d4ff" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,12"/>
+
+                                <!-- Enable Remote Control -->
+                                <Border Background="#0C0C16" CornerRadius="6" Padding="12" Margin="0,0,0,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="启用远程控制" Foreground="White" FontSize="13"/>
+                                            <TextBlock Text="通过手机浏览器访问终端" Foreground="#6a6a8a" FontSize="10" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                        <ToggleButton Grid.Column="1"
+                                                      IsChecked="{Binding RemoteControlEnabled}"
+                                                      Style="{StaticResource CyberToggleSwitchStyle}"
+                                                      VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Remote Control Details (shown when enabled) -->
+                                <StackPanel Visibility="{Binding RemoteControlEnabled, Converter={StaticResource Boolean2VisibilityConverter}}">
+                                    <!-- Local URL -->
+                                    <Border Background="#0C0C16" CornerRadius="6" Padding="12" Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <TextBlock Text="本地地址" Foreground="#6a6a8a" FontSize="10" Margin="0,0,0,4"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding RemoteLocalUrl}" Foreground="#00d4ff" FontSize="11" FontFamily="Consolas" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                <Button Grid.Column="1" Content="复制" Style="{StaticResource TechButtonStyle}" Command="{Binding CopyRemoteUrlCommand}" Padding="8,4" FontSize="10" Margin="8,0,0,0"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Access Token -->
+                                    <Border Background="#0C0C16" CornerRadius="6" Padding="12" Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <TextBlock Text="访问码" Foreground="#6a6a8a" FontSize="10" Margin="0,0,0,4"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border Grid.Column="0" Background="#14141F" BorderBrush="#00d4ff40" BorderThickness="1" CornerRadius="4" Padding="12,6">
+                                                    <TextBlock Text="{Binding RemoteAccessToken}" Foreground="#00d4ff" FontFamily="Consolas" FontSize="18" FontWeight="Bold"/>
+                                                </Border>
+                                                <Button Grid.Column="1" Content="刷新" Style="{StaticResource TechButtonStyle}" Command="{Binding RefreshAccessTokenCommand}" Padding="8,4" FontSize="10" Margin="8,0,0,0"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Connection Count -->
+                                    <Border Background="#0C0C16" CornerRadius="6" Padding="12" Margin="0,0,0,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="当前连接数" Foreground="White" FontSize="13"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding RemoteConnectionCount}" Foreground="#00d4ff" FontSize="13" FontWeight="Bold"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Cloudflare Tunnel -->
+                                    <Border Background="#0C0C16" CornerRadius="6" Padding="12" Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock Text="公网访问 (Cloudflare Tunnel)" Foreground="White" FontSize="13"/>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                        <Ellipse Width="8" Height="8" Margin="0,0,6,0">
+                                                            <Ellipse.Style>
+                                                                <Style TargetType="Ellipse">
+                                                                    <Setter Property="Fill" Value="#4a4a6a"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsTunnelRunning}" Value="True">
+                                                                            <Setter Property="Fill" Value="#16c60c"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Ellipse.Style>
+                                                        </Ellipse>
+                                                        <TextBlock Text="{Binding TunnelStatusText}" Foreground="#6a6a8a" FontSize="10"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- Public URL (shown when tunnel running) -->
+                                            <Border Background="#14141F" CornerRadius="4" Padding="8" Margin="0,0,0,8"
+                                                    Visibility="{Binding IsTunnelRunning, Converter={StaticResource Boolean2VisibilityConverter}}">
+                                                <TextBox Text="{Binding RemotePublicUrl, Mode=OneWay}"
+                                                         Foreground="#16c60c" FontSize="10" FontFamily="Consolas"
+                                                         TextWrapping="Wrap" IsReadOnly="True"
+                                                         Background="Transparent" BorderThickness="0"
+                                                         Cursor="IBeam"/>
+                                            </Border>
+
+                                            <!-- Tunnel Buttons -->
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Content="启动隧道" Style="{StaticResource TechPrimaryButtonStyle}" Command="{Binding StartTunnelCommand}" Padding="12,6" FontSize="11" Margin="0,0,8,0">
+                                                    <Button.Visibility>
+                                                        <MultiBinding Converter="{StaticResource AnyBoolToCollapsedConverter}">
+                                                            <Binding Path="IsTunnelRunning"/>
+                                                        </MultiBinding>
+                                                    </Button.Visibility>
+                                                </Button>
+                                                <Button Content="停止隧道" Style="{StaticResource TechButtonStyle}" Command="{Binding StopTunnelCommand}" Padding="12,6" FontSize="11" Margin="0,0,8,0"
+                                                        Visibility="{Binding IsTunnelRunning, Converter={StaticResource Boolean2VisibilityConverter}}"/>
+
+                                                <!-- Install cloudflared button with loading animation -->
+                                                <Button Command="{Binding InstallCloudflaredCommand}" Padding="12,6" FontSize="11" Foreground="#c19c00">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button" BasedOn="{StaticResource TechButtonStyle}">
+                                                            <Setter Property="Cursor" Value="Hand"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsInstallingCloudflared}" Value="True">
+                                                                    <Setter Property="Cursor" Value="Wait"/>
+                                                                    <Setter Property="IsEnabled" Value="False"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                    <Button.Content>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <!-- Loading spinner (visible when installing) -->
+                                                            <TextBlock Text="◈" Margin="0,0,6,0"
+                                                                       Visibility="{Binding IsInstallingCloudflared, Converter={StaticResource Boolean2VisibilityConverter}}">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding IsInstallingCloudflared}" Value="True">
+                                                                                <DataTrigger.EnterActions>
+                                                                                    <BeginStoryboard>
+                                                                                        <Storyboard RepeatBehavior="Forever">
+                                                                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                                                                             From="0" To="360" Duration="0:0:1"/>
+                                                                                        </Storyboard>
+                                                                                    </BeginStoryboard>
+                                                                                </DataTrigger.EnterActions>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                                <TextBlock.RenderTransform>
+                                                                    <RotateTransform CenterX="5" CenterY="7"/>
+                                                                </TextBlock.RenderTransform>
+                                                            </TextBlock>
+                                                            <!-- Button text -->
+                                                            <TextBlock>
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Text" Value="安装 cloudflared"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding IsInstallingCloudflared}" Value="True">
+                                                                                <Setter Property="Text" Value="安装中..."/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                    </Button.Content>
+                                                    <Button.Visibility>
+                                                        <MultiBinding Converter="{StaticResource AnyBoolToCollapsedConverter}">
+                                                            <Binding Path="IsCloudflaredInstalled"/>
+                                                        </MultiBinding>
+                                                    </Button.Visibility>
+                                                </Button>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
 
                                 <!-- Version Info -->
                                 <Border Height="1" Background="#1A1A2A" Margin="0,20,0,16"/>
