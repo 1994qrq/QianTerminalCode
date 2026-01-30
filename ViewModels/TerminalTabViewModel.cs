@@ -190,6 +190,9 @@ public partial class TerminalTabViewModel : ObservableObject, IDisposable
                 return;
 
             WebView.CoreWebView2.Profile.PreferredColorScheme = CoreWebView2PreferredColorScheme.Dark;
+
+            // 禁用开发者工具（防止 Ctrl+Shift+I/C 打开调试界面）
+            WebView.CoreWebView2.Settings.AreDevToolsEnabled = false;
         };
 
         try

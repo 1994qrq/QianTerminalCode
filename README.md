@@ -317,8 +317,10 @@ dotnet publish -c Release -r win-x64 --self-contained
 |--------|------|
 | `Ctrl+Shift+Space` | 显示/隐藏悬浮状态栏 |
 | `ESC` | 关闭悬浮窗口/对话框 |
-| `Ctrl+Shift+C` | 复制终端选中内容 |
-| `Ctrl+Shift+V` | 粘贴到终端 |
+
+**终端复制粘贴**
+- 选中文本后，点击右上角「📋 复制选中」按钮
+- 粘贴：在终端中右键粘贴，或使用系统粘贴快捷键
 
 ---
 
