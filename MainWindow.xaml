@@ -1673,7 +1673,14 @@
                                     <!-- Access Token -->
                                     <Border Background="#0C0C16" CornerRadius="6" Padding="12" Margin="0,0,0,8">
                                         <StackPanel>
-                                            <TextBlock Text="访问码" Foreground="#6a6a8a" FontSize="10" Margin="0,0,0,4"/>
+                                            <Grid Margin="0,0,0,4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="访问码" Foreground="#6a6a8a" FontSize="10"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding TokenTimeRemaining}" Foreground="#505070" FontSize="10"/>
+                                            </Grid>
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>

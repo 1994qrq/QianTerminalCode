@@ -236,6 +236,11 @@ public partial class MainWindowViewModel : ObservableObject
     private string _remoteAccessToken = string.Empty;
 
     [ObservableProperty]
+    private string _tokenTimeRemaining = string.Empty;
+
+    private System.Windows.Threading.DispatcherTimer? _tokenCountdownTimer;
+
+    [ObservableProperty]
     private int _remoteConnectionCount;
 
     [ObservableProperty]
@@ -1098,6 +1103,9 @@ public partial class MainWindowViewModel : ObservableObject
             await remoteService.StartAsync(RemoteControlPort);
             RemoteLocalUrl = remoteService.LocalUrl;
             RemoteAccessToken = remoteService.AccessToken;
+
+            // 启动倒计时定时器
+            StartTokenCountdownTimer();
         }
         catch (Exception ex)
         {
@@ -1118,13 +1126,84 @@ public partial class MainWindowViewModel : ObservableObject
     /// </summary>
     private void StopRemoteControl()
     {
+        // 停止倒计时定时器
+        StopTokenCountdownTimer();
+
         App.RemoteControlService?.Stop();
         RemoteLocalUrl = string.Empty;
         RemotePublicUrl = string.Empty;
         RemoteAccessToken = string.Empty;
+        TokenTimeRemaining = string.Empty;
         RemoteConnectionCount = 0;
         IsTunnelRunning = false;
         TunnelStatusText = "未启动";
+    }
+
+    /// <summary>
+    /// 启动 Token 倒计时定时器
+    /// </summary>
+    private void StartTokenCountdownTimer()
+    {
+        StopTokenCountdownTimer();
+
+        _tokenCountdownTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(1)
+        };
+        _tokenCountdownTimer.Tick += (s, e) => UpdateTokenTimeRemaining();
+        _tokenCountdownTimer.Start();
+
+        // 立即更新一次
+        UpdateTokenTimeRemaining();
+    }
+
+    /// <summary>
+    /// 停止 Token 倒计时定时器
+    /// </summary>
+    private void StopTokenCountdownTimer()
+    {
+        if (_tokenCountdownTimer != null)
+        {
+            _tokenCountdownTimer.Stop();
+            _tokenCountdownTimer = null;
+        }
+    }
+
+    /// <summary>
+    /// 更新 Token 剩余时间显示
+    /// </summary>
+    private void UpdateTokenTimeRemaining()
+    {
+        var remoteService = App.RemoteControlService;
+        if (remoteService == null)
+        {
+            TokenTimeRemaining = string.Empty;
+            return;
+        }
+
+        var expiry = remoteService.TokenExpiry;
+        var remaining = expiry - DateTime.UtcNow;
+
+        if (remaining.TotalSeconds <= 0)
+        {
+            // Token 已过期，刷新
+            RemoteAccessToken = remoteService.RefreshToken();
+            remaining = remoteService.TokenExpiry - DateTime.UtcNow;
+        }
+
+        // 格式化显示
+        if (remaining.TotalHours >= 1)
+        {
+            TokenTimeRemaining = $"{(int)remaining.TotalHours}小时{remaining.Minutes}分后刷新";
+        }
+        else if (remaining.TotalMinutes >= 1)
+        {
+            TokenTimeRemaining = $"{remaining.Minutes}分{remaining.Seconds}秒后刷新";
+        }
+        else
+        {
+            TokenTimeRemaining = $"{remaining.Seconds}秒后刷新";
+        }
     }
 
     [RelayCommand]
@@ -1150,6 +1229,7 @@ public partial class MainWindowViewModel : ObservableObject
         if (remoteService != null)
         {
             RemoteAccessToken = remoteService.RefreshToken();
+            UpdateTokenTimeRemaining();
         }
     }
 
