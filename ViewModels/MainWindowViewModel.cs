@@ -527,23 +527,9 @@ public partial class MainWindowViewModel : ObservableObject
 
         if (existingTab != null)
         {
-            // 已存在相同路径的标签，询问是否跳转查看
-            var viewResult = CyberConfirmDialog.Show(
-                owner: Application.Current?.MainWindow,
-                title: "Claude 完成任务",
-                message: workingDirectory,
-                subMessage: "此路径的标签已存在于程序中。\n是否立即查看该标签？",
-                confirmText: "查看标签",
-                cancelText: "关闭"
-            );
-
-            if (viewResult)
-            {
-                // 跳转到已存在的标签
-                SelectedTab = existingTab;
-                return true;
-            }
-            return false;
+            // 已存在相同路径的标签，直接跳转（用户点击通知的意图就是查看）
+            SelectedTab = existingTab;
+            return true;
         }
 
         // 不存在相同路径的标签，弹出导入确认对话框
