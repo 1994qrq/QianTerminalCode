@@ -10,7 +10,7 @@
         xmlns:converters="clr-namespace:CodeBridge.Converters"
         mc:Ignorable="d"
         x:Name="MainWin"
-        Title="飞跃侠·CodeBridge"
+        Title="{Binding WindowTitle}"
         Height="850"
         Width="1280"
         MinHeight="600"

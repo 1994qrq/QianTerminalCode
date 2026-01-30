@@ -35,6 +35,9 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private TerminalTabViewModel? _selectedTab;
 
+    [ObservableProperty]
+    private string _windowTitle = "飞跃侠·CodeBridge";
+
     /// <summary>
     /// 通知列表（供通知中心绑定）
     /// </summary>
@@ -53,11 +56,17 @@ public partial class MainWindowViewModel : ObservableObject
         {
             _tabNote = value.Config.Note ?? string.Empty;
             OnPropertyChanged(nameof(TabNote));
+
+            // 更新窗口标题
+            WindowTitle = $"飞跃侠·CodeBridge - {value.DisplayName}";
         }
         else
         {
             _tabNote = string.Empty;
             OnPropertyChanged(nameof(TabNote));
+
+            // 无选中标签时恢复默认标题
+            WindowTitle = "飞跃侠·CodeBridge";
         }
     }
 
