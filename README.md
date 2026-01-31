@@ -9,7 +9,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 [![WebView2](https://img.shields.io/badge/WebView2-xterm.js-blue?style=flat-square)](https://xtermjs.org/)
 
-<img src="docs/screenshots/hero.png" alt="CodeBridge Hero" width="800"/>
+<img src="docs/screenshots/ui-theme.png" alt="CodeBridge Hero" width="800"/>
 
 *赛博朋克风格 · 多标签终端 · 移动端远程控制 · Claude Code 深度集成*
 
@@ -99,9 +99,7 @@
 
 ### 🔔 智能通知系统
 
-<table>
-<tr>
-<td width="60%">
+<img src="docs/screenshots/notify.png" alt="Notification" width="350"/>
 
 **任务完成提醒**
 - Claude Code 任务完成自动弹窗通知
@@ -114,25 +112,6 @@
 - 双列布局，一览所有终端状态
 - 工作中/空闲筛选
 - 点击标签快速切换
-
-</td>
-<td width="40%">
-
-```
-┌─────────────────────┐
-│ 🔔 Claude 任务完成   │
-│                     │
-│ [release] 标签已完成 │
-│ 耗时 3 分 24 秒      │
-│                     │
-│ ────────────────    │
-│   [查看]  [关闭]    │
-└─────────────────────┘
-```
-
-</td>
-</tr>
-</table>
 
 ### 🤖 Claude Code 深度集成
 
@@ -177,13 +156,13 @@ claude --dangerously-skip-permissions [-c]
 
 **方式一：下载发行版**
 
-前往 [Releases](https://github.com/yourname/codebridge/releases) 下载最新版本。
+前往 [Releases](https://github.com/1994qrq/QianTerminalCode/releases) 下载最新版本。
 
 **方式二：从源码构建**
 
 ```bash
-git clone https://github.com/yourname/codebridge.git
-cd codebridge
+git clone https://github.com/1994qrq/QianTerminalCode.git
+cd QianTerminalCode
 dotnet publish -c Release -r win-x64 --self-contained
 ```
 
@@ -386,8 +365,8 @@ CodeBridge/
 ### 构建项目
 
 ```bash
-git clone https://github.com/yourname/codebridge.git
-cd codebridge
+git clone https://github.com/1994qrq/QianTerminalCode.git
+cd QianTerminalCode
 dotnet restore
 dotnet build
 ```
@@ -401,6 +380,25 @@ feat(tabs): 添加标签拖拽排序功能
 fix(remote): 修复 WebSocket 连接断开问题
 docs: 更新 README 移动端部分
 ```
+
+---
+
+## ☕ 支持项目 (Support)
+
+如果您觉得本项目对您有所帮助，欢迎打赏作者！
+
+<table>
+<tr>
+<td align="center" width="33%">
+<b>支付宝 (Alipay)</b><br><br>
+<img src="docs/pay/alipay.jpg" alt="Alipay" width="200"/>
+</td>
+<td align="center" width="33%">
+<b>微信支付 (WeChat)</b><br><br>
+<img src="docs/pay/wxpay.jpg" alt="WeChat Pay" width="200"/>
+</td>
+</tr>
+</table>
 
 ---
 
@@ -424,6 +422,6 @@ docs: 更新 README 移动端部分
 
 **如果这个项目对你有帮助，请给个 ⭐ Star 支持一下！**
 
-Made with ❤️ by [Your Name]
+Made with ❤️ by [ruiqian_qin](https://linux.do/u/ruiqian_qin/summary)
 
 </div>
