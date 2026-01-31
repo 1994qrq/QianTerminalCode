@@ -19,6 +19,25 @@
 
 ---
 
+## ☕ 支持项目 (Support)
+
+如果您觉得本项目对您有所帮助，欢迎打赏作者！
+
+<table>
+<tr>
+<td align="center" width="50%">
+<b>支付宝 (Alipay)</b><br><br>
+<img src="docs/pay/alipay.jpg" alt="Alipay" width="200"/>
+</td>
+<td align="center" width="50%">
+<b>微信支付 (WeChat)</b><br><br>
+<img src="docs/pay/wxpay.jpg" alt="WeChat Pay" width="200"/>
+</td>
+</tr>
+</table>
+
+---
+
 ## 为什么选择 CodeBridge？
 
 当你使用 Claude Code 进行 AI 编程时，是否遇到过这些问题？
@@ -380,25 +399,6 @@ feat(tabs): 添加标签拖拽排序功能
 fix(remote): 修复 WebSocket 连接断开问题
 docs: 更新 README 移动端部分
 ```
-
----
-
-## ☕ 支持项目 (Support)
-
-如果您觉得本项目对您有所帮助，欢迎打赏作者！
-
-<table>
-<tr>
-<td align="center" width="33%">
-<b>支付宝 (Alipay)</b><br><br>
-<img src="docs/pay/alipay.jpg" alt="Alipay" width="200"/>
-</td>
-<td align="center" width="33%">
-<b>微信支付 (WeChat)</b><br><br>
-<img src="docs/pay/wxpay.jpg" alt="WeChat Pay" width="200"/>
-</td>
-</tr>
-</table>
 
 ---
 
