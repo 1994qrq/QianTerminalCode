@@ -6,9 +6,9 @@ using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
-using MyAiHelper.ViewModels;
+using CodeBridge.ViewModels;
 
-namespace MyAiHelper.Views;
+namespace CodeBridge.Views;
 
 /// <summary>
 /// 悬浮状态栏 - 灵动岛风格
@@ -18,6 +18,7 @@ public partial class FloatingStatusBar : Window
     private readonly ObservableCollection<TerminalTabViewModel> _allTabs;
     private readonly Action<TerminalTabViewModel> _onTabSelected;
     private bool _isClosing = false;
+    private System.Windows.Threading.DispatcherTimer? _refreshTimer;
 
     /// <summary>
     /// 筛选后的标签列表
@@ -39,14 +40,12 @@ public partial class FloatingStatusBar : Window
         // 初始化位置（屏幕顶部中央，隐藏状态）
         PositionWindow();
 
-        // 监听失去焦点时自动关闭
-        Deactivated += (s, e) =>
+        // 初始化定时刷新器（每秒刷新一次状态）
+        _refreshTimer = new System.Windows.Threading.DispatcherTimer
         {
-            if (!_isClosing)
-            {
-                HideWithAnimation();
-            }
+            Interval = TimeSpan.FromSeconds(1)
         };
+        _refreshTimer.Tick += (s, e) => RefreshTabs();
 
         // 监听 ESC 键关闭
         KeyDown += (s, e) =>
@@ -115,10 +114,12 @@ public partial class FloatingStatusBar : Window
     {
         // 头部 44 + 分隔线 1 + 边距 20 + 外边距 20
         const double headerHeight = 85;
-        // 每个标签项高度（包含边距）
-        const double itemHeight = 46;
-        // 最大显示 8 个标签
-        const int maxVisibleItems = 8;
+        // 每个标签项高度（紧凑版，含边距）
+        const double itemHeight = 36;
+        // 双列布局，每行 2 个
+        const int columnsCount = 2;
+        // 最大显示行数
+        const int maxVisibleRows = 10;
         // 空状态高度
         const double emptyStateHeight = 100;
 
@@ -129,8 +130,10 @@ public partial class FloatingStatusBar : Window
         }
         else
         {
-            int visibleCount = Math.Min(FilteredTabs.Count, maxVisibleItems);
-            contentHeight = visibleCount * itemHeight;
+            // 计算行数（向上取整）
+            int rowCount = (int)Math.Ceiling((double)FilteredTabs.Count / columnsCount);
+            int visibleRows = Math.Min(rowCount, maxVisibleRows);
+            contentHeight = visibleRows * itemHeight;
         }
 
         Height = headerHeight + contentHeight;
@@ -145,6 +148,9 @@ public partial class FloatingStatusBar : Window
 
         // 刷新数据
         RefreshTabs();
+
+        // 启动定时刷新
+        _refreshTimer?.Start();
 
         // 确保窗口可见
         Show();
@@ -184,6 +190,9 @@ public partial class FloatingStatusBar : Window
         if (_isClosing) return;
         _isClosing = true;
 
+        // 停止定时刷新
+        _refreshTimer?.Stop();
+
         // 滑出动画
         var slideOut = new DoubleAnimation
         {
@@ -209,6 +218,14 @@ public partial class FloatingStatusBar : Window
 
         BeginAnimation(TopProperty, slideOut);
         BeginAnimation(OpacityProperty, fadeOut);
+    }
+
+    /// <summary>
+    /// 关闭按钮点击
+    /// </summary>
+    private void CloseButton_Click(object sender, RoutedEventArgs e)
+    {
+        HideWithAnimation();
     }
 
     /// <summary>

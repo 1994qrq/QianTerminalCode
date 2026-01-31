@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace MyAiHelper.Models;
+namespace CodeBridge.Models;
 
 /// <summary>
 /// 应用设置模型
@@ -30,6 +30,11 @@ public class WindowSettings
 public class UserPreferences
 {
     /// <summary>
+    /// 是否已完成首次引导
+    /// </summary>
+    public bool HasCompletedOnboarding { get; set; } = false;
+
+    /// <summary>
     /// 启动时全屏（隐藏任务栏）
     /// </summary>
     public bool StartFullScreen { get; set; } = true;
@@ -58,6 +63,37 @@ public class UserPreferences
     /// 悬浮状态栏快捷键配置
     /// </summary>
     public StatusBarHotkey StatusBarHotkey { get; set; } = new();
+
+    /// <summary>
+    /// 远程控制设置
+    /// </summary>
+    public RemoteControlSettings RemoteControl { get; set; } = new();
+
+    /// <summary>
+    /// 终端 Shell 类型（cmd 或 powershell）
+    /// </summary>
+    public string ShellType { get; set; } = "powershell";
+}
+
+/// <summary>
+/// 远程控制设置
+/// </summary>
+public class RemoteControlSettings
+{
+    /// <summary>
+    /// 是否启用远程控制
+    /// </summary>
+    public bool IsEnabled { get; set; } = false;
+
+    /// <summary>
+    /// 本地服务端口
+    /// </summary>
+    public int Port { get; set; } = 8765;
+
+    /// <summary>
+    /// 是否自动启动隧道
+    /// </summary>
+    public bool AutoStartTunnel { get; set; } = false;
 }
 
 /// <summary>

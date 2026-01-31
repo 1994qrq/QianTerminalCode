@@ -1,0 +1,192 @@
+<Window x:Class="CodeBridge.Views.CyberTrayMenu"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="TrayMenu"
+        Width="200" Height="Auto"
+        SizeToContent="Height"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        Topmost="True"
+        ResizeMode="NoResize"
+        Deactivated="Window_Deactivated"
+        Opacity="0"
+        FontFamily="Microsoft YaHei UI">
+
+    <Window.Resources>
+        <!-- 颜色定义 -->
+        <Color x:Key="CyanColor">#00F0FF</Color>
+        <Color x:Key="PinkColor">#FF003C</Color>
+        <SolidColorBrush x:Key="CyanBrush" Color="{StaticResource CyanColor}"/>
+        <SolidColorBrush x:Key="PinkBrush" Color="{StaticResource PinkColor}"/>
+
+        <!-- 菜单项样式 -->
+        <Style x:Key="MenuItemStyle" TargetType="Button">
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="15,12"/>
+            <Setter Property="Foreground" Value="#C0C0E0"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Padding="{TemplateBinding Padding}">
+                            <Grid>
+                                <!-- 左侧指示条 -->
+                                <Border x:Name="Indicator"
+                                        Width="2"
+                                        HorizontalAlignment="Left"
+                                        Margin="-15,0,0,0"
+                                        Background="{StaticResource CyanBrush}"
+                                        Opacity="0"/>
+
+                                <!-- 内容 -->
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                  VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#15FFFFFF"/>
+                                <Setter Property="Foreground" Value="{StaticResource CyanBrush}"/>
+                                <Setter TargetName="Indicator" Property="Opacity" Value="1"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#25FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 退出按钮样式（粉红色） -->
+        <Style x:Key="ExitMenuItemStyle" TargetType="Button" BasedOn="{StaticResource MenuItemStyle}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Padding="{TemplateBinding Padding}">
+                            <Grid>
+                                <Border x:Name="Indicator"
+                                        Width="2"
+                                        HorizontalAlignment="Left"
+                                        Margin="-15,0,0,0"
+                                        Background="{StaticResource PinkBrush}"
+                                        Opacity="0"/>
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                  VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#20FF003C"/>
+                                <Setter Property="Foreground" Value="{StaticResource PinkBrush}"/>
+                                <Setter TargetName="Indicator" Property="Opacity" Value="1"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#35FF003C"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="8">
+        <!-- 主容器 -->
+        <Border Background="#F0101018"
+                BorderBrush="{StaticResource CyanBrush}"
+                BorderThickness="1"
+                CornerRadius="6">
+            <Border.Effect>
+                <DropShadowEffect Color="#00F0FF" BlurRadius="15" ShadowDepth="0" Opacity="0.4"/>
+            </Border.Effect>
+
+            <Grid>
+                <!-- 装饰性角标 -->
+                <Path Data="M0,0 L12,0 L12,2 L2,2 L2,12 L0,12 Z"
+                      Fill="{StaticResource CyanBrush}"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Top"
+                      Margin="0,0,0,0"
+                      Opacity="0.8"/>
+                <Path Data="M0,0 L12,0 L12,2 L2,2 L2,12 L0,12 Z"
+                      Fill="{StaticResource CyanBrush}"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Bottom"
+                      Opacity="0.8">
+                    <Path.RenderTransform>
+                        <RotateTransform Angle="180" CenterX="6" CenterY="6"/>
+                    </Path.RenderTransform>
+                </Path>
+
+                <StackPanel Margin="0,8">
+                    <!-- 标题区域 -->
+                    <StackPanel Margin="15,5,15,8">
+                        <TextBlock Text="飞 跃 侠 · C o d e B r i d g e"
+                                   FontSize="9"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource CyanBrush}">
+                            <TextBlock.Effect>
+                                <DropShadowEffect Color="#00F0FF" BlurRadius="5" ShadowDepth="0" Opacity="0.5"/>
+                            </TextBlock.Effect>
+                        </TextBlock>
+                        <TextBlock Text="AI 终端管理器"
+                                   FontSize="10"
+                                   Foreground="#606080"
+                                   Margin="0,2,0,0"/>
+                    </StackPanel>
+
+                    <!-- 分隔线 -->
+                    <Border Height="1">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="Transparent" Offset="0"/>
+                                <GradientStop Color="#3000F0FF" Offset="0.5"/>
+                                <GradientStop Color="Transparent" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+
+                    <!-- 菜单项 -->
+                    <Button Style="{StaticResource MenuItemStyle}"
+                            Click="ShowWindow_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="◈" Foreground="{StaticResource CyanBrush}" Margin="0,0,10,0" FontSize="14"/>
+                            <TextBlock Text="显示主窗口"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- 分隔线 -->
+                    <Border Height="1" Margin="15,4">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="Transparent" Offset="0"/>
+                                <GradientStop Color="#20FFFFFF" Offset="0.5"/>
+                                <GradientStop Color="Transparent" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+
+                    <!-- 退出按钮 -->
+                    <Button Style="{StaticResource ExitMenuItemStyle}"
+                            Click="Exit_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="⏻" Foreground="{StaticResource PinkBrush}" Margin="0,0,10,0" FontSize="14"/>
+                            <TextBlock Text="完全退出"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

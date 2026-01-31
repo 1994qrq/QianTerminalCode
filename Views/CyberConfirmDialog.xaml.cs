@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Input;
 
-namespace MyAiHelper.Views
+namespace CodeBridge.Views
 {
     /// <summary>
     /// 赛博朋克风格的确认对话框

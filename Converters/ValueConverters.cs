@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 
-namespace MyAiHelper.Converters;
+namespace CodeBridge.Converters;
 
 /// <summary>
 /// 布尔值转状态颜色转换器
@@ -201,5 +201,29 @@ public class AnyBoolToCollapsedConverter : IMultiValueConverter
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, System.Globalization.CultureInfo culture)
     {
         throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Shell 类型转选中状态转换器
+/// </summary>
+public class ShellTypeToCheckedConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+    {
+        if (value is string shellType && parameter is string targetType2)
+        {
+            return string.Equals(shellType, targetType2, StringComparison.OrdinalIgnoreCase);
+        }
+        return false;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+    {
+        if (value is bool isChecked && isChecked && parameter is string targetType2)
+        {
+            return targetType2;
+        }
+        return Binding.DoNothing;
     }
 }

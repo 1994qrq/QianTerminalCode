@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using System.Text.Json;
-using MyAiHelper.Models;
+using CodeBridge.Models;
 
-namespace MyAiHelper.Services;
+namespace CodeBridge.Services;
 
 /// <summary>
 /// 配置持久化服务
@@ -15,7 +15,7 @@ public class ConfigService
     public ConfigService()
     {
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var appFolder = Path.Combine(appData, "MyAiHelper");
+        var appFolder = Path.Combine(appData, "CodeBridge");
         Directory.CreateDirectory(appFolder);
         _configPath = Path.Combine(appFolder, "config.json");
     }

@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace MyAiHelper.Helpers;
+namespace CodeBridge.Helpers;
 
 /// <summary>
 /// BindingProxy - 用于解决 DataContext 无法跨视觉树传递的问题

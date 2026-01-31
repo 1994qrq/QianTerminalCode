@@ -3,7 +3,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-namespace MyAiHelper.Native;
+namespace CodeBridge.Native;
 
 /// <summary>
 /// ConPTY (Pseudo Console) Native API 封装

@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-namespace MyAiHelper.Native;
+namespace CodeBridge.Native;
 
 /// <summary>
 /// Job Object Native API 封装 - 确保进程树清理

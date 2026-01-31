@@ -1,5 +1,5 @@
-﻿# MyAiHelper Claude Hook 通知脚本
-# 当 Claude Code 触发 Hook 时，通过命名管道发送通知到 MyAiHelper
+# 飞跃侠·CodeBridge Claude Hook 通知脚本
+# 当 Claude Code 触发 Hook 时，通过命名管道发送通知到 飞跃侠·CodeBridge
 
 param(
     [string]$EventType = "Stop"
@@ -15,14 +15,14 @@ try {
     # 忽略读取错误
 }
 
-# 读取由 MyAiHelper 注入的标签页 ID
-$tabId = $env:MYAIHELPER_TAB_ID
-$cwd = $env:MYAIHELPER_CWD
+# 读取由 飞跃侠·CodeBridge 注入的标签页 ID
+$tabId = $env:CODEBRIDGE_TAB_ID
+$cwd = $env:CODEBRIDGE_CWD
 if ([string]::IsNullOrEmpty($cwd)) {
     $cwd = (Get-Location).Path
 }
 
-# 如果没有 tabId（不在 MyAiHelper 中运行），直接退出
+# 如果没有 tabId（不在 飞跃侠·CodeBridge 中运行），直接退出
 if ([string]::IsNullOrEmpty($tabId)) {
     exit 0
 }
@@ -85,7 +85,7 @@ $payload = @{
 } | ConvertTo-Json -Compress
 
 # 通过命名管道发送消息
-$pipeName = "MyAiHelperPipe"
+$pipeName = "CodeBridgePipe"
 
 try {
     $pipeClient = New-Object System.IO.Pipes.NamedPipeClientStream(".", $pipeName, [System.IO.Pipes.PipeDirection]::Out)
@@ -102,9 +102,7 @@ try {
 
     $pipeClient.Dispose()
 } catch {
-    # 连接失败（MyAiHelper 可能未运行），静默忽略
-    # 可选：写入日志
-    # "$((Get-Date).ToString('o')) - Failed to connect to MyAiHelper: $_" | Out-File -Append "$env:TEMP\myaihelper-hook.log"
+    # 连接失败（飞跃侠·CodeBridge 可能未运行），静默忽略
 }
 
 exit 0

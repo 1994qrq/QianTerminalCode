@@ -1,4 +1,4 @@
-namespace MyAiHelper.Models;
+namespace CodeBridge.Models;
 
 /// <summary>
 /// 通知类型枚举

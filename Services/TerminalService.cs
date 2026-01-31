@@ -4,10 +4,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using MyAiHelper.Models;
-using MyAiHelper.Native;
+using CodeBridge.Models;
+using CodeBridge.Native;
 
-namespace MyAiHelper.Services;
+namespace CodeBridge.Services;
 
 /// <summary>
 /// 终端服务 - 管理 ConPTY 会话
@@ -26,6 +26,10 @@ public class TerminalService : IDisposable
 
         private readonly CancellationTokenSource _cts = new();
 
+        // 用于检测 -c 失败并自动重试
+        private bool _pendingContinueRetry = false;
+        private readonly object _retryLock = new();
+
         public TerminalSession(string id, ConPtyNative.PseudoConsole pty, JobObjectNative.JobObject job, Process process)
         {
             Id = id;
@@ -35,6 +39,26 @@ public class TerminalService : IDisposable
 
             // 启动输出读取任务
             Task.Run(async () => await ReadOutputAsync(_cts.Token));
+        }
+
+        /// <summary>
+        /// 标记需要检测 -c 失败
+        /// </summary>
+        public void EnableContinueRetryDetection()
+        {
+            lock (_retryLock)
+            {
+                _pendingContinueRetry = true;
+            }
+
+            // 3 秒后自动取消检测（防止误触发）
+            Task.Delay(3000).ContinueWith(_ =>
+            {
+                lock (_retryLock)
+                {
+                    _pendingContinueRetry = false;
+                }
+            });
         }
 
         private async Task ReadOutputAsync(CancellationToken ct)
@@ -48,7 +72,28 @@ public class TerminalService : IDisposable
                     if (read > 0)
                     {
                         var output = new string(buffer, 0, read);
+
+                        // 检测 -c 失败并自动重试
+                        bool shouldRetry = false;
+                        lock (_retryLock)
+                        {
+                            if (_pendingContinueRetry && output.Contains("No conversation found to continue"))
+                            {
+                                _pendingContinueRetry = false;
+                                shouldRetry = true;
+                            }
+                        }
+
                         OutputReceived?.Invoke(output);
+
+                        // 延迟重试（不带 -c）
+                        if (shouldRetry)
+                        {
+                            _ = Task.Delay(500).ContinueWith(_ =>
+                            {
+                                SendInput("claude --dangerously-skip-permissions\r\n");
+                            });
+                        }
                     }
                     else
                     {
@@ -89,7 +134,7 @@ public class TerminalService : IDisposable
         }
     }
 
-    public TerminalSession Start(TabConfig config, Action<string> onOutput)
+    public TerminalSession Start(TabConfig config, Action<string> onOutput, string shellType = "powershell")
     {
         var sessionId = config.Id;
 
@@ -102,8 +147,8 @@ public class TerminalService : IDisposable
         // 选择可用的工作目录（空/无效路径会导致子进程立刻退出）
         var workingDirectory = ResolveWorkingDirectory(config.WorkingDirectory);
 
-        // 启动 PowerShell 7 (pwsh.exe) - 提供更好的终端体验
-        var commandLine = GetShellCommandLine();
+        // 根据用户设置选择 Shell
+        var commandLine = GetShellCommandLine(shellType);
         var process = ConPtyNative.CreateProcess(
             commandLine,
             workingDirectory,
@@ -127,9 +172,21 @@ public class TerminalService : IDisposable
         _sessions[sessionId] = session;
 
         // 注入环境变量，供 Claude Hook 脚本识别标签页
+        // 根据 Shell 类型使用不同的语法
         Task.Delay(300).ContinueWith(_ =>
         {
-            var setEnvCommand = $"$env:MYAIHELPER_TAB_ID='{config.Id}'; $env:MYAIHELPER_CWD='{config.WorkingDirectory.Replace("'", "''")}'; Clear-Host\r\n";
+            string setEnvCommand;
+            if (shellType.Equals("cmd", StringComparison.OrdinalIgnoreCase))
+            {
+                // CMD 语法：set VAR=value
+                var escapedCwd = config.WorkingDirectory.Replace("\"", "\"\"");
+                setEnvCommand = $"set MYAIHELPER_TAB_ID={config.Id}&& set MYAIHELPER_CWD={escapedCwd}&& cls\r\n";
+            }
+            else
+            {
+                // PowerShell 语法：$env:VAR='value'
+                setEnvCommand = $"$env:MYAIHELPER_TAB_ID='{config.Id}'; $env:MYAIHELPER_CWD='{config.WorkingDirectory.Replace("'", "''")}'; Clear-Host\r\n";
+            }
             session.SendInput(setEnvCommand);
         });
 
@@ -139,10 +196,16 @@ public class TerminalService : IDisposable
             Task.Delay(800).ContinueWith(_ =>
             {
                 // 如果启用了继续会话，则添加 -c 参数
-                var command = config.ContinueSession
-                    ? "claude --dangerously-skip-permissions -c\r\n"
-                    : "claude --dangerously-skip-permissions\r\n";
-                session.SendInput(command);
+                if (config.ContinueSession)
+                {
+                    // 启用 -c 失败检测，自动重试
+                    session.EnableContinueRetryDetection();
+                    session.SendInput("claude --dangerously-skip-permissions -c\r\n");
+                }
+                else
+                {
+                    session.SendInput("claude --dangerously-skip-permissions\r\n");
+                }
             });
         }
 
@@ -162,10 +225,18 @@ public class TerminalService : IDisposable
     }
 
     /// <summary>
-    /// 获取 Shell 命令行，优先使用 PowerShell 7，回退到 PowerShell 5，最后使用 cmd.exe
+    /// 获取 Shell 命令行
     /// </summary>
-    private static string GetShellCommandLine()
+    /// <param name="shellType">Shell 类型：powershell 或 cmd</param>
+    private static string GetShellCommandLine(string shellType = "powershell")
     {
+        if (shellType.Equals("cmd", StringComparison.OrdinalIgnoreCase))
+        {
+            // 使用 cmd.exe
+            return Environment.GetEnvironmentVariable("ComSpec") ?? "cmd.exe";
+        }
+
+        // 默认使用 PowerShell
         // 优先: PowerShell 7 (pwsh.exe)
         var pwshPaths = new[]
         {

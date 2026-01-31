@@ -6,14 +6,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace MyAiHelper.Services;
+namespace CodeBridge.Services;
 
 /// <summary>
 /// IPC 服务 - 通过命名管道接收来自 Claude Hook 的通知
 /// </summary>
 public class IpcService : IDisposable
 {
-    private const string PipeName = "MyAiHelperPipe";
+    private const string PipeName = "CodeBridgePipe";
     private readonly CancellationTokenSource _cts = new();
     private Task? _listenerTask;
     private bool _isDisposed = false;
@@ -56,12 +56,13 @@ public class IpcService : IDisposable
     {
         while (!_cts.Token.IsCancellationRequested)
         {
+            NamedPipeServerStream? server = null;
             try
             {
-                using var server = new NamedPipeServerStream(
+                server = new NamedPipeServerStream(
                     PipeName,
                     PipeDirection.In,
-                    NamedPipeServerStream.MaxAllowedServerInstances,
+                    1,  // 只允许一个实例，避免冲突
                     PipeTransmissionMode.Byte,
                     PipeOptions.Asynchronous);
 
@@ -82,11 +83,20 @@ public class IpcService : IDisposable
                 // 正常取消，退出循环
                 break;
             }
+            catch (IOException)
+            {
+                // 管道被占用，可能是程序多开，等待后重试
+                await Task.Delay(2000, _cts.Token);
+            }
             catch (Exception ex)
             {
                 // 记录错误但继续监听
                 System.Diagnostics.Debug.WriteLine($"[IpcService] Error: {ex.Message}");
-                await Task.Delay(100, _cts.Token); // 短暂延迟后重试
+                await Task.Delay(500, _cts.Token);
+            }
+            finally
+            {
+                server?.Dispose();
             }
         }
     }
@@ -125,7 +135,31 @@ public class IpcService : IDisposable
     /// </summary>
     public void Stop()
     {
+        if (_isDisposed) return;
+
         _cts.Cancel();
+
+        // 发送一个虚拟连接来"唤醒"阻塞的 WaitForConnectionAsync
+        // 这是解决 Windows 命名管道无法被正确取消的标准做法
+        try
+        {
+            using var dummyClient = new NamedPipeClientStream(".", PipeName, PipeDirection.Out);
+            dummyClient.Connect(100); // 100ms 超时
+        }
+        catch
+        {
+            // 忽略连接失败（服务可能已经停止）
+        }
+
+        // 等待监听任务结束（最多 500ms）
+        try
+        {
+            _listenerTask?.Wait(500);
+        }
+        catch
+        {
+            // 忽略等待超时
+        }
     }
 
     public void Dispose()
@@ -133,7 +167,7 @@ public class IpcService : IDisposable
         if (_isDisposed) return;
         _isDisposed = true;
 
-        _cts.Cancel();
+        Stop();
         _cts.Dispose();
     }
 }

@@ -1,14 +1,14 @@
-<Window x:Class="MyAiHelper.Views.FloatingStatusBar"
+<Window x:Class="CodeBridge.Views.FloatingStatusBar"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:converters="clr-namespace:MyAiHelper.Converters"
+        xmlns:converters="clr-namespace:CodeBridge.Converters"
         mc:Ignorable="d"
         Title="FloatingStatusBar"
-        Width="480"
+        Width="520"
         Height="Auto"
-        MaxHeight="420"
+        MaxHeight="480"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -188,9 +188,9 @@
                         </TextBlock.Effect>
                     </TextBlock>
                     <!-- Title Text -->
-                    <TextBlock Text="TERMINAL STATUS"
+                    <TextBlock Text="飞跃侠·CodeBridge"
                                Foreground="{StaticResource CyberTextBrush}"
-                               FontFamily="Consolas"
+                               FontFamily="Microsoft YaHei UI"
                                FontSize="13"
                                FontWeight="Bold"
                                VerticalAlignment="Center"
@@ -212,6 +212,31 @@
                                   IsChecked="False"
                                   Checked="FilterButton_Changed"
                                   Unchecked="FilterButton_Changed"/>
+
+                    <!-- 分隔线 -->
+                    <Border Width="1" Height="16" Background="#3A3A5A" Margin="12,0"/>
+
+                    <!-- 关闭按钮 -->
+                    <Button x:Name="CloseButton"
+                            Click="CloseButton_Click"
+                            ToolTip="关闭 (ESC)"
+                            Cursor="Hand"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Padding="6,4">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bd" Background="Transparent" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                    <TextBlock Text="✕" FontSize="12" Foreground="#6A6A8A" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bd" Property="Background" Value="#30FF6B6B"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
                 </StackPanel>
             </Grid>
 
@@ -240,27 +265,34 @@
                 </ScrollViewer.Resources>
 
                 <ItemsControl x:Name="TabItemsControl">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <!-- 双列布局 -->
+                            <UniformGrid Columns="2"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
+                            <!-- 紧凑标签项 -->
                             <Button Style="{StaticResource TabItemButtonStyle}"
                                     Click="TabItem_Click"
-                                    Tag="{Binding}">
-                                <Grid>
+                                    Tag="{Binding}"
+                                    Margin="2">
+                                <Grid Height="24">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="20"/>
+                                        <ColumnDefinition Width="14"/>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Status Indicator -->
                                     <Grid Grid.Column="0" VerticalAlignment="Center">
                                         <!-- Working: Green Pulsing Dot -->
                                         <Ellipse x:Name="WorkingDot"
-                                                 Width="8" Height="8"
+                                                 Width="6" Height="6"
                                                  Fill="{StaticResource CyberGreenBrush}"
                                                  Visibility="{Binding IsTaskRunning, Converter={StaticResource BooleanToVisibilityConverter}}">
                                             <Ellipse.Effect>
-                                                <DropShadowEffect Color="{StaticResource CyberGreen}" BlurRadius="8" ShadowDepth="0" Opacity="0.8"/>
+                                                <DropShadowEffect Color="{StaticResource CyberGreen}" BlurRadius="6" ShadowDepth="0" Opacity="0.8"/>
                                             </Ellipse.Effect>
                                             <Ellipse.Triggers>
                                                 <EventTrigger RoutedEvent="Loaded">
@@ -275,9 +307,9 @@
                                             </Ellipse.Triggers>
                                         </Ellipse>
                                         <!-- Idle: Gray Hollow Circle -->
-                                        <Ellipse Width="8" Height="8"
+                                        <Ellipse Width="6" Height="6"
                                                  Stroke="{StaticResource CyberTextDimBrush}"
-                                                 StrokeThickness="1.5"
+                                                 StrokeThickness="1"
                                                  Fill="Transparent"
                                                  Visibility="{Binding IsTaskRunning, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
                                     </Grid>
@@ -287,42 +319,10 @@
                                                Text="{Binding DisplayName}"
                                                Foreground="{StaticResource CyberTextBrush}"
                                                FontFamily="Consolas"
-                                               FontSize="13"
+                                               FontSize="11"
                                                VerticalAlignment="Center"
                                                TextTrimming="CharacterEllipsis"
-                                               MaxWidth="280"
-                                               Margin="8,0,0,0"/>
-
-                                    <!-- Status Text -->
-                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="&#x2192;"
-                                                   Foreground="{StaticResource CyberTextDimBrush}"
-                                                   FontSize="12"
-                                                   Margin="0,0,6,0"/>
-                                        <TextBlock Text="{Binding IsTaskRunning, Converter={StaticResource BoolToStatusTextConverter}}"
-                                                   FontFamily="Consolas"
-                                                   FontSize="11"
-                                                   VerticalAlignment="Center">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsTaskRunning}" Value="True">
-                                                            <Setter Property="Foreground" Value="{StaticResource CyberGreenBrush}"/>
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding IsTaskRunning}" Value="False">
-                                                            <Setter Property="Foreground" Value="{StaticResource CyberTextDimBrush}"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                        <!-- Play Icon for Working -->
-                                        <TextBlock Text=" &#x25B6;"
-                                                   Foreground="{StaticResource CyberGreenBrush}"
-                                                   FontSize="8"
-                                                   VerticalAlignment="Center"
-                                                   Visibility="{Binding IsTaskRunning, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                    </StackPanel>
+                                               Margin="6,0,0,0"/>
                                 </Grid>
                             </Button>
                         </DataTemplate>

@@ -1,9 +1,9 @@
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using MyAiHelper.Models;
+using CodeBridge.Models;
 
-namespace MyAiHelper.Services;
+namespace CodeBridge.Services;
 
 /// <summary>
 /// 配置导入/导出服务

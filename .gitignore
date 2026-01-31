@@ -32,3 +32,16 @@ settings.json
 
 # WebView2 cache
 EBWebView/
+
+# Logs
+log/
+*.log
+
+# Temp files
+nul
+
+# Tool cache
+.ace-tool/
+
+# NotifyService is a separate project
+NotifyService/

@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Timers;
 
-namespace MyAiHelper.Services;
+namespace CodeBridge.Services;
 
 /// <summary>
 /// 任务完成检测器 - 监听终端输出并识别任务完成/空闲信号
@@ -27,12 +27,18 @@ public class TaskCompletionDetector : IDisposable
     /// </summary>
     public event EventHandler<TaskCompletedEventArgs>? TaskCompleted;
 
+    /// <summary>
+    /// 活动状态变化事件（工作中/待机中）
+    /// </summary>
+    public event EventHandler<bool>? ActivityChanged;
+
     private readonly string _tabId;
     private readonly StringBuilder _lineBuffer = new();
-    private readonly Timer _idleTimer;
+    private readonly System.Timers.Timer _idleTimer;
     private bool _isDisposed = false;
     private bool _hasTriggeredIdle = false; // 防止重复触发
     private DateTime _lastOutputTime = DateTime.UtcNow;
+    private bool _isActive = false; // 当前是否活跃（工作中）
 
     // ANSI 转义序列正则（用于剥离颜色等控制字符）
     private static readonly Regex AnsiRegex = new(
@@ -83,7 +89,7 @@ public class TaskCompletionDetector : IDisposable
         _tabId = tabId;
 
         // 初始化空闲检测定时器
-        _idleTimer = new Timer(1000); // 每秒检查一次
+        _idleTimer = new System.Timers.Timer(1000); // 每秒检查一次
         _idleTimer.Elapsed += OnIdleTimerElapsed;
         _idleTimer.AutoReset = true;
         _idleTimer.Start();
@@ -94,11 +100,21 @@ public class TaskCompletionDetector : IDisposable
     /// </summary>
     private void OnIdleTimerElapsed(object? sender, ElapsedEventArgs e)
     {
-        // 必须已收到过输出，才能触发空闲检测（防止启动时误触发）
-        if (_isDisposed || !EnableIdleTimeout || _hasTriggeredIdle || !_hasReceivedOutput)
-            return;
+        if (_isDisposed) return;
 
         var idleSeconds = (DateTime.UtcNow - _lastOutputTime).TotalSeconds;
+
+        // 检查活动状态变化（2秒无输出则变为待机）
+        if (_isActive && idleSeconds >= 2)
+        {
+            _isActive = false;
+            ActivityChanged?.Invoke(this, false);
+        }
+
+        // 必须已收到过输出，才能触发空闲检测（防止启动时误触发）
+        if (!EnableIdleTimeout || _hasTriggeredIdle || !_hasReceivedOutput)
+            return;
+
         if (idleSeconds >= IdleTimeoutSeconds)
         {
             _hasTriggeredIdle = true;
@@ -121,6 +137,13 @@ public class TaskCompletionDetector : IDisposable
         // 更新最后输出时间，重置空闲检测
         _lastOutputTime = DateTime.UtcNow;
         _hasTriggeredIdle = false; // 有新输出，重置空闲触发标记
+
+        // 检查活动状态变化（有输出则变为工作中）
+        if (!_isActive)
+        {
+            _isActive = true;
+            ActivityChanged?.Invoke(this, true);
+        }
 
         // 追加到行缓冲区
         _lineBuffer.Append(output);

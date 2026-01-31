@@ -3,9 +3,9 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Threading;
-using MyAiHelper.Models;
+using CodeBridge.Models;
 
-namespace MyAiHelper.Services;
+namespace CodeBridge.Services;
 
 /// <summary>
 /// 通知服务 - 管理应用程序通知

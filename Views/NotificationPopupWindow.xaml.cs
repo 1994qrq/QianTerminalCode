@@ -3,9 +3,9 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
-using MyAiHelper.Models;
+using CodeBridge.Models;
 
-namespace MyAiHelper.Views;
+namespace CodeBridge.Views;
 
 /// <summary>
 /// 科技感悬浮通知窗口
