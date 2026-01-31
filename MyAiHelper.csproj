@@ -8,16 +8,57 @@
     <UseWindowsForms>true</UseWindowsForms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+
+    <!-- 程序集名称和产品信息 -->
+    <AssemblyName>飞跃侠CodeBridge</AssemblyName>
+    <Product>飞跃侠·CodeBridge</Product>
+    <AssemblyTitle>飞跃侠·CodeBridge - AI终端管理器</AssemblyTitle>
+    <Description>AI 编程助手多标签终端管理器</Description>
+    <Company>飞跃侠</Company>
+    <Copyright>Copyright © 飞跃侠 2025</Copyright>
+
+    <!-- 自包含发布配置 -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+
+    <!-- 可选：裁剪未使用的代码（可显著减小体积，但可能有兼容性问题） -->
+    <!-- <PublishTrimmed>true</PublishTrimmed> -->
+    <!-- <TrimMode>link</TrimMode> -->
   </PropertyGroup>
+
+  <!-- 排除 NotifyService 子项目 -->
+  <ItemGroup>
+    <Compile Remove="NotifyService\**" />
+    <Content Remove="NotifyService\**" />
+    <EmbeddedResource Remove="NotifyService\**" />
+    <None Remove="NotifyService\**" />
+  </ItemGroup>
+
+  <!-- 排除 TestEnv 测试目录 -->
+  <ItemGroup>
+    <Compile Remove="TestEnv\**" />
+    <Content Remove="TestEnv\**" />
+    <EmbeddedResource Remove="TestEnv\**" />
+    <None Remove="TestEnv\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="EmbedIO" Version="3.5.2" />
     <PackageReference Include="HandyControl" Version="3.5.1" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3650.58" />
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Assets\app.ico" />
     <None Update="Assets\terminal\index.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\tools\cloudflared.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

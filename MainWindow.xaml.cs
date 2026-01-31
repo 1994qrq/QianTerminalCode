@@ -75,13 +75,14 @@ namespace CodeBridge
                 Visible = false
             };
 
-            // 加载图标
+            // 加载图标：优先从嵌入资源加载（单文件发布兼容）
             try
             {
-                var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "app.ico");
-                if (File.Exists(iconPath))
+                var resourceUri = new Uri("pack://application:,,,/Assets/app.ico", UriKind.Absolute);
+                var streamInfo = Application.GetResourceStream(resourceUri);
+                if (streamInfo != null)
                 {
-                    _notifyIcon.Icon = new Icon(iconPath);
+                    _notifyIcon.Icon = new Icon(streamInfo.Stream);
                 }
                 else
                 {
