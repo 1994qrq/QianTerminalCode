@@ -2768,7 +2768,7 @@ namespace CodeBridge
                     <div class='contact-label'>微信号</div>
                     <div class='contact-value'>qian913761489</div>
                 </div>
-                <button class='copy-btn' onclick=""navigator.clipboard.writeText('qian913761489');this.textContent='已复制!';setTimeout(()=>this.textContent='复制',1500)"">复制</button>
+                <button class='copy-btn' onclick=""copyText('qian913761489', this)"">复制</button>
             </div>
 
             <div class='contact-item'>
@@ -2779,7 +2779,7 @@ namespace CodeBridge
                         <a href='https://linux.do/u/ruiqian_qin/summary' target='_blank'>linux.do/u/ruiqian_qin</a>
                     </div>
                 </div>
-                <button class='copy-btn' onclick=""navigator.clipboard.writeText('https://linux.do/u/ruiqian_qin/summary');this.textContent='已复制!';setTimeout(()=>this.textContent='复制',1500)"">复制</button>
+                <button class='copy-btn' onclick=""copyText('https://linux.do/u/ruiqian_qin/summary', this)"">复制</button>
             </div>
         </div>
 
@@ -2791,6 +2791,12 @@ namespace CodeBridge
         </div>
     </div>
 <script>
+    function copyText(text, btn) {{
+        window.chrome.webview.postMessage(JSON.stringify({{ action: 'copy', text: text }}));
+        btn.textContent = '已复制!';
+        setTimeout(() => btn.textContent = '复制', 1500);
+    }}
+
     function checkUpdate() {{
         const btn = document.getElementById('checkUpdateBtn');
         const status = document.getElementById('updateStatus');
@@ -2949,6 +2955,14 @@ namespace CodeBridge
                         {
                             case "close":
                                 Dispatcher.Invoke(() => dialog.Close());
+                                break;
+
+                            case "copy":
+                                var textToCopy = msg.GetProperty("text").GetString();
+                                Dispatcher.Invoke(() =>
+                                {
+                                    System.Windows.Clipboard.SetText(textToCopy ?? "");
+                                });
                                 break;
 
                             case "checkUpdate":

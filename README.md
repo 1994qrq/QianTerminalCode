@@ -8,6 +8,7 @@
 [![Windows](https://img.shields.io/badge/Windows-10%2B-0078D6?style=flat-square&logo=windows)](https://www.microsoft.com/windows)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 [![WebView2](https://img.shields.io/badge/WebView2-xterm.js-blue?style=flat-square)](https://xtermjs.org/)
+[![Linux.do](https://img.shields.io/badge/Linux.do-ruiqian__qin-00d4ff?style=flat-square)](https://linux.do/u/ruiqian_qin/summary)
 
 <img src="docs/screenshots/ui-theme.png" alt="CodeBridge Hero" width="800"/>
 
