@@ -2339,6 +2339,8 @@ namespace CodeBridge
 
         private void ShowAboutDialog()
         {
+            var updateService = new AutoUpdateService();
+            var currentVersion = updateService.CurrentVersion;
             var currentYear = DateTime.Now.Year;
             var html = $@"
 <!DOCTYPE html>
@@ -2602,6 +2604,115 @@ namespace CodeBridge
             0%, 100% {{ transform: scale(1); }}
             50% {{ transform: scale(1.2); }}
         }}
+        /* 更新相关样式 */
+        .update-section {{
+            text-align: center;
+            margin: 20px 0;
+        }}
+        .update-btn {{
+            background: linear-gradient(135deg, #00d4ff20, #bd00ff20);
+            border: 1px solid #00d4ff60;
+            color: #00d4ff;
+            padding: 12px 28px;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+        }}
+        .update-btn:hover {{
+            background: linear-gradient(135deg, #00d4ff30, #bd00ff30);
+            box-shadow: 0 0 20px #00d4ff40;
+            transform: translateY(-2px);
+        }}
+        .update-btn:disabled {{
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }}
+        .update-status {{
+            margin-top: 12px;
+            font-size: 13px;
+            min-height: 20px;
+        }}
+        .update-status.success {{ color: #00ff88; }}
+        .update-status.info {{ color: #00d4ff; }}
+        .update-status.error {{ color: #ff6b6b; }}
+        .progress-container {{
+            margin-top: 15px;
+            background: #1a1a2a;
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+            position: relative;
+        }}
+        .progress-bar {{
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #bd00ff);
+            width: 0%;
+            transition: width 0.3s;
+            border-radius: 10px;
+        }}
+        .progress-text {{
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 11px;
+            color: #fff;
+            text-shadow: 0 0 5px #000;
+        }}
+        .new-version-info {{
+            margin-top: 10px;
+            padding: 12px;
+            background: #00d4ff10;
+            border: 1px solid #00d4ff30;
+            border-radius: 8px;
+            text-align: left;
+        }}
+        .new-version-info .version-tag {{
+            color: #00ff88;
+            font-weight: bold;
+        }}
+        .new-version-info .release-notes {{
+            margin-top: 8px;
+            font-size: 12px;
+            color: #a0a0c0;
+            max-height: 80px;
+            overflow-y: auto;
+        }}
+        .action-btns {{
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }}
+        .action-btns button {{
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }}
+        .download-btn {{
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            border: none;
+            color: #0a0a12;
+            font-weight: bold;
+        }}
+        .download-btn:hover {{
+            box-shadow: 0 0 15px #00ff8860;
+        }}
+        .release-btn {{
+            background: transparent;
+            border: 1px solid #6a6a8a;
+            color: #a0a0c0;
+        }}
+        .release-btn:hover {{
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }}
     </style>
 </head>
 <body>
@@ -2612,7 +2723,18 @@ namespace CodeBridge
             <div class='logo'>◈</div>
             <div class='app-name'>QIANTERMINALCODE</div>
             <div class='tagline'>AI 编程助手终端管理器</div>
-            <div class='version'>Version 1.0.0 // Terminal Edition</div>
+            <div class='version'>Version {currentVersion} // Terminal Edition</div>
+        </div>
+
+        <div class='update-section'>
+            <button class='update-btn' id='checkUpdateBtn' onclick='checkUpdate()'>
+                <span id='updateBtnText'>🔍 检查更新</span>
+            </button>
+            <div class='update-status' id='updateStatus'></div>
+            <div class='progress-container' id='progressContainer' style='display:none;'>
+                <div class='progress-bar' id='progressBar'></div>
+                <div class='progress-text' id='progressText'>0%</div>
+            </div>
         </div>
 
         <div class='divider'></div>
@@ -2668,10 +2790,234 @@ namespace CodeBridge
             </div>
         </div>
     </div>
+<script>
+    function checkUpdate() {{
+        const btn = document.getElementById('checkUpdateBtn');
+        const status = document.getElementById('updateStatus');
+        btn.disabled = true;
+        document.getElementById('updateBtnText').textContent = '⏳ 检查中...';
+        status.className = 'update-status info';
+        status.textContent = '正在连接 GitHub...';
+        window.chrome.webview.postMessage(JSON.stringify({{ action: 'checkUpdate' }}));
+    }}
+
+    function downloadUpdate() {{
+        const status = document.getElementById('updateStatus');
+        const progress = document.getElementById('progressContainer');
+        status.className = 'update-status info';
+        status.textContent = '正在下载更新...';
+        progress.style.display = 'block';
+        window.chrome.webview.postMessage(JSON.stringify({{ action: 'downloadUpdate' }}));
+    }}
+
+    function openReleasePage() {{
+        window.chrome.webview.postMessage(JSON.stringify({{ action: 'openRelease' }}));
+    }}
+
+    function updateProgress(percent) {{
+        document.getElementById('progressBar').style.width = percent + '%';
+        document.getElementById('progressText').textContent = percent + '%';
+    }}
+
+    function showUpdateAvailable(version, notes, size) {{
+        const btn = document.getElementById('checkUpdateBtn');
+        const status = document.getElementById('updateStatus');
+        btn.style.display = 'none';
+        status.innerHTML = `
+            <div class='new-version-info'>
+                <div><span class='version-tag'>🎉 发现新版本: v${{version}}</span> (${{size}})</div>
+                <div class='release-notes'>${{notes || '暂无更新说明'}}</div>
+            </div>
+            <div class='action-btns'>
+                <button class='download-btn' onclick='downloadUpdate()'>⬇️ 立即更新</button>
+                <button class='release-btn' onclick='openReleasePage()'>📄 查看详情</button>
+            </div>
+        `;
+    }}
+
+    function showNoUpdate() {{
+        const btn = document.getElementById('checkUpdateBtn');
+        const status = document.getElementById('updateStatus');
+        btn.disabled = false;
+        document.getElementById('updateBtnText').textContent = '🔍 检查更新';
+        status.className = 'update-status success';
+        status.textContent = '✓ 已是最新版本';
+    }}
+
+    function showError(msg) {{
+        const btn = document.getElementById('checkUpdateBtn');
+        const status = document.getElementById('updateStatus');
+        btn.disabled = false;
+        document.getElementById('updateBtnText').textContent = '🔍 重新检查';
+        status.className = 'update-status error';
+        status.textContent = '✗ ' + msg;
+    }}
+
+    function showDownloadComplete() {{
+        const status = document.getElementById('updateStatus');
+        status.className = 'update-status success';
+        status.innerHTML = '✓ 下载完成，程序即将重启...';
+    }}
+</script>
 </body>
 </html>";
 
-            ShowCyberDialog("关于 QianTerminalCode", 550, 680, html);
+            ShowAboutDialogWithUpdate(html, updateService);
+        }
+
+        /// <summary>
+        /// 显示带自动更新功能的关于对话框
+        /// </summary>
+        private void ShowAboutDialogWithUpdate(string html, AutoUpdateService updateService)
+        {
+            var dialog = new Window
+            {
+                Title = "关于 QianTerminalCode",
+                Width = 550,
+                Height = 720,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Owner = this,
+                WindowStyle = WindowStyle.None,
+                AllowsTransparency = true,
+                Background = System.Windows.Media.Brushes.Transparent,
+                ResizeMode = ResizeMode.NoResize
+            };
+
+            var webView = new Microsoft.Web.WebView2.Wpf.WebView2
+            {
+                DefaultBackgroundColor = System.Drawing.Color.FromArgb(255, 10, 10, 18)
+            };
+
+            var (container, loadingOverlay) = CreateWebViewWithLoading(webView);
+
+            var border = new Border
+            {
+                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(10, 10, 18)),
+                BorderBrush = new System.Windows.Media.LinearGradientBrush(
+                    System.Windows.Media.Color.FromRgb(0, 212, 255),
+                    System.Windows.Media.Color.FromRgb(189, 0, 255),
+                    45),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(8),
+                Child = container,
+                Margin = new Thickness(5)
+            };
+
+            border.Effect = new System.Windows.Media.Effects.DropShadowEffect
+            {
+                Color = System.Windows.Media.Color.FromRgb(0, 212, 255),
+                BlurRadius = 15,
+                ShadowDepth = 0,
+                Opacity = 0.3
+            };
+
+            dialog.Content = border;
+            dialog.MouseLeftButtonDown += (s, _) =>
+            {
+                try { dialog.DragMove(); } catch { }
+            };
+            dialog.KeyDown += (s, args) =>
+            {
+                if (args.Key == Key.Escape) dialog.Close();
+            };
+
+            // 更新进度回调
+            updateService.DownloadProgressChanged += progress =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    webView.CoreWebView2?.ExecuteScriptAsync($"updateProgress({progress})");
+                });
+            };
+
+            dialog.Loaded += async (s, _) =>
+            {
+                await webView.EnsureCoreWebView2Async();
+                webView.CoreWebView2.NavigationCompleted += (sender, args) =>
+                {
+                    Dispatcher.Invoke(() => HideLoadingOverlay(loadingOverlay));
+                };
+                webView.CoreWebView2.WebMessageReceived += async (sender, args) =>
+                {
+                    try
+                    {
+                        var json = args.TryGetWebMessageAsString();
+                        var msg = System.Text.Json.JsonDocument.Parse(json).RootElement;
+                        var action = msg.GetProperty("action").GetString();
+
+                        switch (action)
+                        {
+                            case "close":
+                                Dispatcher.Invoke(() => dialog.Close());
+                                break;
+
+                            case "checkUpdate":
+                                try
+                                {
+                                    var hasUpdate = await updateService.CheckForUpdateAsync();
+                                    await Dispatcher.InvokeAsync(async () =>
+                                    {
+                                        if (hasUpdate && updateService.LatestRelease != null)
+                                        {
+                                            var release = updateService.LatestRelease;
+                                            var notesEscaped = release.ReleaseNotes
+                                                .Replace("\\", "\\\\")
+                                                .Replace("'", "\\'")
+                                                .Replace("\n", "<br>")
+                                                .Replace("\r", "");
+                                            await webView.CoreWebView2.ExecuteScriptAsync(
+                                                $"showUpdateAvailable('{release.Version}', '{notesEscaped}', '{release.FileSizeFormatted}')");
+                                        }
+                                        else
+                                        {
+                                            await webView.CoreWebView2.ExecuteScriptAsync("showNoUpdate()");
+                                        }
+                                    });
+                                }
+                                catch (Exception ex)
+                                {
+                                    await Dispatcher.InvokeAsync(async () =>
+                                    {
+                                        await webView.CoreWebView2.ExecuteScriptAsync($"showError('{ex.Message.Replace("'", "\\'")}')");
+                                    });
+                                }
+                                break;
+
+                            case "downloadUpdate":
+                                try
+                                {
+                                    var success = await updateService.DownloadAndInstallAsync();
+                                    if (success)
+                                    {
+                                        await Dispatcher.InvokeAsync(async () =>
+                                        {
+                                            await webView.CoreWebView2.ExecuteScriptAsync("showDownloadComplete()");
+                                        });
+                                        // 等待一下让用户看到提示，然后退出
+                                        await Task.Delay(1500);
+                                        Dispatcher.Invoke(() => Application.Current.Shutdown());
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    await Dispatcher.InvokeAsync(async () =>
+                                    {
+                                        await webView.CoreWebView2.ExecuteScriptAsync($"showError('下载失败: {ex.Message.Replace("'", "\\'")}')");
+                                    });
+                                }
+                                break;
+
+                            case "openRelease":
+                                updateService.OpenReleasePage();
+                                break;
+                        }
+                    }
+                    catch { }
+                };
+                webView.NavigateToString(html);
+            };
+
+            dialog.ShowDialog();
         }
 
         /// <summary>
