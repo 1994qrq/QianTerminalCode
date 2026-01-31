@@ -934,6 +934,9 @@ namespace CodeBridge
                 DefaultBackgroundColor = System.Drawing.Color.FromArgb(255, 10, 10, 18)
             };
 
+            // 创建带加载动画的容器
+            var (container, loadingOverlay) = CreateWebViewWithLoading(webView);
+
             var border = new Border
             {
                 Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(10, 10, 18)),
@@ -943,7 +946,7 @@ namespace CodeBridge
                     45),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(8),
-                Child = webView,
+                Child = container,
                 Margin = new Thickness(5)
             };
 
@@ -983,6 +986,10 @@ namespace CodeBridge
                         });
                     }
                     catch { }
+                };
+                webView.CoreWebView2.NavigationCompleted += (sender, args) =>
+                {
+                    Dispatcher.Invoke(() => HideLoadingOverlay(loadingOverlay));
                 };
                 webView.NavigateToString(html);
             };
@@ -1545,6 +1552,9 @@ namespace CodeBridge
                 DefaultBackgroundColor = System.Drawing.Color.FromArgb(255, 10, 10, 18)
             };
 
+            // 创建带加载动画的容器
+            var (container, loadingOverlay) = CreateWebViewWithLoading(webView);
+
             var border = new Border
             {
                 Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(10, 10, 18)),
@@ -1554,7 +1564,7 @@ namespace CodeBridge
                     45),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(8),
-                Child = webView,
+                Child = container,
                 Margin = new Thickness(5)
             };
 
@@ -1626,6 +1636,10 @@ namespace CodeBridge
                     }
                     catch { }
                 };
+                webView.CoreWebView2.NavigationCompleted += (sender, args) =>
+                {
+                    Dispatcher.Invoke(() => HideLoadingOverlay(loadingOverlay));
+                };
                 webView.NavigateToString(html);
             };
 
@@ -1676,6 +1690,9 @@ namespace CodeBridge
                 DefaultBackgroundColor = System.Drawing.Color.FromArgb(255, 10, 10, 18)
             };
 
+            // 创建带加载动画的容器
+            var (container, loadingOverlay) = CreateWebViewWithLoading(webView);
+
             var border = new Border
             {
                 Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(10, 10, 18)),
@@ -1685,7 +1702,7 @@ namespace CodeBridge
                     45),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(8),
-                Child = webView,
+                Child = container,
                 Margin = new Thickness(5)
             };
 
@@ -1710,6 +1727,10 @@ namespace CodeBridge
             dialog.Loaded += async (s, _) =>
             {
                 await webView.EnsureCoreWebView2Async();
+                webView.CoreWebView2.NavigationCompleted += (sender, args) =>
+                {
+                    Dispatcher.Invoke(() => HideLoadingOverlay(loadingOverlay));
+                };
                 webView.CoreWebView2.WebMessageReceived += async (sender, args) =>
                 {
                     try
@@ -2656,6 +2677,109 @@ namespace CodeBridge
         /// <summary>
         /// 通用科技风对话框
         /// </summary>
+        /// <summary>
+        /// 创建 WebView2 容器（带赛博朋克风格加载动画）
+        /// </summary>
+        private (Grid container, Border loadingOverlay) CreateWebViewWithLoading(Microsoft.Web.WebView2.Wpf.WebView2 webView)
+        {
+            var container = new Grid();
+
+            // WebView2 在底层
+            container.Children.Add(webView);
+
+            // 加载覆盖层
+            var loadingOverlay = new Border
+            {
+                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(10, 10, 18)),
+                Name = "LoadingOverlay"
+            };
+
+            // 加载内容
+            var loadingStack = new StackPanel
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            // 赛博朋克旋转动画圈
+            var spinnerBorder = new Border
+            {
+                Width = 40,
+                Height = 40,
+                CornerRadius = new CornerRadius(20),
+                BorderThickness = new Thickness(3),
+                BorderBrush = new System.Windows.Media.LinearGradientBrush(
+                    System.Windows.Media.Color.FromRgb(0, 212, 255),
+                    System.Windows.Media.Color.FromRgb(189, 0, 255),
+                    0),
+                Background = System.Windows.Media.Brushes.Transparent,
+                RenderTransformOrigin = new System.Windows.Point(0.5, 0.5),
+                RenderTransform = new System.Windows.Media.RotateTransform(0),
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+
+            // 旋转动画
+            var rotateAnim = new DoubleAnimation
+            {
+                From = 0,
+                To = 360,
+                Duration = TimeSpan.FromSeconds(1.2),
+                RepeatBehavior = RepeatBehavior.Forever,
+                EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = EasingMode.EaseInOut }
+            };
+            spinnerBorder.RenderTransform.BeginAnimation(System.Windows.Media.RotateTransform.AngleProperty, rotateAnim);
+
+            // 加载文字
+            var loadingText = new TextBlock
+            {
+                Text = "LOADING",
+                Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 212, 255)),
+                FontSize = 12,
+                FontFamily = new System.Windows.Media.FontFamily("Consolas"),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 12, 0, 0),
+                Opacity = 0.8
+            };
+
+            // 文字闪烁动画
+            var blinkAnim = new DoubleAnimation
+            {
+                From = 0.4,
+                To = 1,
+                Duration = TimeSpan.FromSeconds(0.6),
+                AutoReverse = true,
+                RepeatBehavior = RepeatBehavior.Forever
+            };
+            loadingText.BeginAnimation(TextBlock.OpacityProperty, blinkAnim);
+
+            loadingStack.Children.Add(spinnerBorder);
+            loadingStack.Children.Add(loadingText);
+            loadingOverlay.Child = loadingStack;
+
+            container.Children.Add(loadingOverlay);
+
+            return (container, loadingOverlay);
+        }
+
+        /// <summary>
+        /// 隐藏加载覆盖层（带淡出动画）
+        /// </summary>
+        private void HideLoadingOverlay(Border loadingOverlay)
+        {
+            var fadeOut = new DoubleAnimation
+            {
+                From = 1,
+                To = 0,
+                Duration = TimeSpan.FromMilliseconds(200),
+                EasingFunction = new System.Windows.Media.Animation.QuadraticEase { EasingMode = EasingMode.EaseOut }
+            };
+            fadeOut.Completed += (s, e) =>
+            {
+                loadingOverlay.Visibility = Visibility.Collapsed;
+            };
+            loadingOverlay.BeginAnimation(Border.OpacityProperty, fadeOut);
+        }
+
         private void ShowCyberDialog(string title, int width, int height, string html, Action? onClose = null)
         {
             var dialog = new Window
@@ -2676,6 +2800,9 @@ namespace CodeBridge
                 DefaultBackgroundColor = System.Drawing.Color.FromArgb(255, 10, 10, 18)
             };
 
+            // 创建带加载动画的容器
+            var (container, loadingOverlay) = CreateWebViewWithLoading(webView);
+
             var border = new Border
             {
                 Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(10, 10, 18)),
@@ -2685,7 +2812,7 @@ namespace CodeBridge
                     45),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(8),
-                Child = webView,
+                Child = container,
                 Margin = new Thickness(5)
             };
 
@@ -2717,6 +2844,11 @@ namespace CodeBridge
                     {
                         dialog.Close();
                     }
+                };
+                // 导航完成后隐藏加载动画
+                webView.CoreWebView2.NavigationCompleted += (sender, args) =>
+                {
+                    Dispatcher.Invoke(() => HideLoadingOverlay(loadingOverlay));
                 };
                 webView.NavigateToString(html);
             };
