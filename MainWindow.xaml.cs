@@ -2717,7 +2717,7 @@ namespace CodeBridge
 </head>
 <body>
     <div class='container'>
-        <button class='close-btn' onclick='window.chrome.webview.postMessage(""close"")'>✕</button>
+        <button class='close-btn' onclick='window.chrome.webview.postMessage(JSON.stringify({{ action: ""close"" }}))'>✕</button>
 
         <div class='logo-container'>
             <div class='logo'>◈</div>
