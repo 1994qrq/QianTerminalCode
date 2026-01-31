@@ -503,19 +503,24 @@ public partial class MainWindowViewModel : ObservableObject
 
         if (tab != null)
         {
-            // 应用内标签，直接跳转
-            SelectedTab = tab;
-            // 恢复并激活主窗口
-            ActivateMainWindow();
+            // 应用内标签，确保在 UI 线程上执行
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                SelectedTab = tab;
+                ActivateMainWindow();
+            });
         }
         else
         {
             // 外部会话通知，询问用户是否新建标签
             // 只有用户确认导入时才激活主窗口
-            if (HandleExternalNotificationClick(notification))
+            Application.Current?.Dispatcher.Invoke(() =>
             {
-                ActivateMainWindow();
-            }
+                if (HandleExternalNotificationClick(notification))
+                {
+                    ActivateMainWindow();
+                }
+            });
         }
     }
 
